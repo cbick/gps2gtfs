@@ -1,0 +1,6 @@
+  user  colin
+  host  localhost
+  port  5432
+  database  gtfs
+  #sslmode  require
+

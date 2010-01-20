@@ -1,0 +1,92 @@
+<Style id="sn_shaded_dot_red">
+	<IconStyle>
+		<color>ff0000ff</color>
+		<scale>1.2</scale>
+		<Icon>
+			<href>http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png</href>
+		</Icon>
+	</IconStyle>
+	<ListStyle>
+	</ListStyle>
+</Style>
+<Style id="sn_shaded_dot_green">
+	<IconStyle>
+		<color>ff00ff00</color>
+		<scale>1.2</scale>
+		<Icon>
+			<href>http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png</href>
+		</Icon>
+	</IconStyle>
+	<ListStyle>
+	</ListStyle>
+</Style>
+<Style id="sh_shaded_dot_green">
+	<IconStyle>
+		<color>ff00ff00</color>
+		<scale>1.4</scale>
+		<Icon>
+			<href>http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png</href>
+		</Icon>
+	</IconStyle>
+	<ListStyle>
+	</ListStyle>
+</Style>
+<Style id="sh_shaded_dot_red">
+	<IconStyle>
+		<color>ff0000ff</color>
+		<scale>1.4</scale>
+		<Icon>
+			<href>http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png</href>
+		</Icon>
+	</IconStyle>
+	<ListStyle>
+	</ListStyle>
+</Style>
+
+
+<StyleMap id="map_shaded_dot_false">
+	<Pair>
+		<key>normal</key>
+		<styleUrl>#sn_shaded_dot_red</styleUrl>
+	</Pair>
+	<Pair>
+		<key>highlight</key>
+		<styleUrl>#sh_shaded_dot_red</styleUrl>
+	</Pair>
+</StyleMap>
+<StyleMap id="map_shaded_dot_true">
+	<Pair>
+		<key>normal</key>
+		<styleUrl>#sn_shaded_dot_green</styleUrl>
+	</Pair>
+	<Pair>
+		<key>highlight</key>
+		<styleUrl>#sh_shaded_dot_green</styleUrl>
+	</Pair>
+</StyleMap>
+
+
+
+
+<Style id="line_true">
+	<LineStyle>
+		<color>ff00ff00</color>
+	</LineStyle>
+</Style>
+<Style id="line_false">
+	<LineStyle>
+		<color>ff0000ff</color>
+	</LineStyle>
+</Style>
+<Style id="gShapeLine">
+	<LineStyle>
+		<width>3</width>
+		<colorMode>random</colorMode>
+	</LineStyle>
+</Style>
+<Style id="segmentLine">
+	<LineStyle>
+		<width>1</width>
+		<colorMode>random</colorMode>
+	</LineStyle>
+</Style>
