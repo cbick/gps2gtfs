@@ -1,49 +1,58 @@
-=====================
-== gps2gtfs README ==
-=====================
+===============================
+===    gps2gtfs README      ===
+===============================
+
+A suite of python and SQL tools for matching bus tracking data to GTFS data.
+
+=== License ===
+
+gps2gtfs is released under the MIT license.
+See LICENSE in this directory.
 
 
+=== About ===
+
+At the moment this is a more-or-less scattered collection of tools which you
+can use to match GPS tracking data of public transportation vehicles with their
+GTFS schedule counterparts. 
+
+The instructions below give a straightforward step-by-step process which
+will accomplish this, but as of yet there is no coherent single interface by 
+which this is done.
 
 
 === Instructions ===
 
-
 0. Prerequisites
 
 You will need:
-  - a brand spanking new SQL database in which you can make tables and such
+  - a SQL database in which you can make tables and such
+  - Python
+  - Python module for accessing your database (recommend psycopg for postgresql)
   - gtfs_SQL_importer tool available at http://cbick.github.com/gtfs_SQL_importer
+  - GTFS data for your agency imported into the database using the above
   - This software
 
 
-1. Import GTFS data to the database.
+1. Set up python database access
 
-There are instructions that come with gtfs_SQL_importer but in a nutshell,
-you will want to do the following from the gtfs_SQL_importer source directory:
+If you're using postgres or other socket-communicating db server:
 
-if you have postgres:
+  In the config folder there is a file called db.config.example. Make a copy
+  of this file called db.config and edit it appropriately. 
 
-cat gtfs_tables.sql \
-      <(python import_gtfs_to_sql.py path/to/gtfs/data/directory) \
-      gtfs_tables_makeindexes.sql \
-      vacuumer.sql \
-  | psql mydbname myusername
+If you're using anything other than postgres:
 
-
-if you don't have postgres:
-
-cat gtfs_tables.sql \
-      <(python import_gtfs_to_sql.py path/to/gtfs/data/directory nocopy) \
-      gtfs_tables_makeindexes.sql \
-  | yoursqldbms
+  Modify common/src/dbutils.py to handle your DBMS (shouldn't be difficult).
 
 
 
 2. Create the schema for bus tracking data.
 
-From the core/sql folder, run the command (using psql as an example):
+From the core/sql folder, apply the make_tables.sql file to you database.
+Using psql as an example, you would run the command:
 
-psql mydbname myusername -f make_tables.sql
+  psql mydbname myusername -f make_tables.sql
 
 
 
@@ -151,7 +160,8 @@ Now, run:
   python Preprocessing.py gps_schedules
 
 This populates the data telling you the actual schedule that each GPS trip
-followed (i.e., when each bus actually arrived at each stop).
+followed (i.e., when each bus actually arrived at each stop). Specifically,
+this data is put into the gps_stop_times table (compare to gtf_stop_times).
 
 
 
@@ -170,3 +180,16 @@ This searches for better matches for routes which are abnormally off-schedule.
 
 From the core/sql folder, you will want to apply the make_table_indexes.sql
 file to your database. This will make all future analyses much much faster.
+
+
+
+8. Analyze
+
+There is some postprocessing/analysis code in the postprocessing directory.
+The postprocessing/sql directory holds code for creating a summary table of
+bus lateness data, as well as some various queries that were useful to me
+when exploring the data. The postprocessing/src directory holds the Stats.py
+file which performs a bunch of statistical analysis and makes plots of the data,
+but it requires the SciPy and Matplotlib libraries.
+
+
