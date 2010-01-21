@@ -26,7 +26,7 @@ import GTFSBusTrack as gtfs
 ### EARLYBIRDS ###
 
 def fix_all_earlybirds():
-  segs = get_segment_IDs();
+  segs = db.get_segment_IDs();
   for i,seg_id in enumerate(segs):
     correct_earlybird(seg_id);
     print "%6.2f%%" % (100*i/float(len(segs)),)
@@ -125,7 +125,7 @@ def load_and_cache_route( route_name ):
 ### GPS SCHEDULES ###
 
 def create_all_actual_timetables():
-  for seg_id in get_segment_IDs(True):
+  for seg_id in db.get_segment_IDs(True):
     create_actual_timetable(seg_id)
   db.commit();
 
@@ -216,37 +216,28 @@ def populate_trip_stop_information(trip_id,stops):
   return cumulative_dist
 
 
+### Autopopulation of routeid_dirtag table ###
+
+def auto_populate_rid_dirtags():
+  """
+  Automatically determines matchup between dirtags and route ID's.
+  This is done by joining the GPS tracking data table's routetag
+  field with the GTFS route table's route_short_name field.  
+  """
+  
+  
 
 
-
-### main and common stuff ###
-
-def get_segment_IDs(scheduled_only=True):
-  cur = db.get_cursor();
-  if scheduled_only:
-    sql = "select gps_segment_id from gps_segments where trip_id is not null"
-  else:
-    sql = "select gps_segment_id from gps_segments"
-  db.SQLExec(cur,sql)
-  seg_ids = [s['gps_segment_id'] for s in cur]
-  cur.close()
-  return seg_ids
-
-def get_route_names():
-  cur = db.get_cursor()
-  db.SQLExec(cur,"select route_short_name from gtf_routes");
-  ret = [s['route_short_name'] for s in cur]
-  cur.close()
-  return ret
-
+### main ###
 
 
 if __name__=="__main__":
   from os import sys
   if len(sys.argv) <= 1:
     print "Usage: %s cmd" %(sys.argv[0],)
-    print " where cmd and its effect is one of the following:"
+    print " where cmd (and its effect) is one of the following:"
     print """  trips -- populates the trip information
+               populate_ridtags -- autopopulates route_id/dirtag matchup
                match_trips -- match gtfs<-> gps trips
                gps_schedules -- from gps trips find actual schedules
                fix_earlybirds -- fix too-early gps trips
@@ -256,10 +247,10 @@ if __name__=="__main__":
   if arg == 'trips':
     populate_all_trip_information()
   elif arg == 'match_trips':
-    load_and_cache_routes(get_route_names())
+    load_and_cache_routes(db.get_route_names())
   elif arg == 'gps_schedules':
     create_all_actual_timetables()
   elif arg == 'fix_earlybirds':
     fix_all_earlybirds()
-
-
+  elif arg == 'populate_ridtags':
+    auto_populate_rid_dirtags()

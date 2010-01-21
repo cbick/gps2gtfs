@@ -674,3 +674,22 @@ def export_trip_stop_information(trip_id,stop_sequence,stop_number,
                    'cdist':str(cumulative_distance),
                    'time':prev_stop_travel_time});
   cur.close()
+
+
+def get_segment_IDs(scheduled_only=True):
+  cur = get_cursor();
+  if scheduled_only:
+    sql = "select gps_segment_id from gps_segments where trip_id is not null"
+  else:
+    sql = "select gps_segment_id from gps_segments"
+  SQLExec(cur,sql)
+  seg_ids = [s['gps_segment_id'] for s in cur]
+  cur.close()
+  return seg_ids
+
+def get_route_names():
+  cur = get_cursor()
+  SQLExec(cur,"select route_short_name from gtf_routes");
+  ret = [s['route_short_name'] for s in cur]
+  cur.close()
+  return ret

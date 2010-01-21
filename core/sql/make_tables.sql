@@ -17,6 +17,11 @@ create table vehicle_track (
   
 );
 
+CREATE TABLE routeid_dirtag (
+    route_id text,
+    dirtag text
+);
+
 create table config (
   key text,
   value text
