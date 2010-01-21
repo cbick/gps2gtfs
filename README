@@ -33,6 +33,16 @@ You will need:
   - GTFS data for your agency imported into the database using the above
   - This software
 
+If you are missing any of the first 3:
+
+  - I recommend PostgreSQL. It can be a pain to set up but handles very nicely.
+  - Get python from www.python.org . I used version 2.5.x when writing this.
+  - You can find python modules for your database from: 
+    	http://wiki.python.org/moin/DatabaseInterfaces
+    If you have PostgreSQL I recommend you get psycopg2:
+        http://initd.org/pub/software/psycopg/
+
+
 
 1. Set up python database access
 
@@ -174,6 +184,12 @@ To fix these, run
 
 This searches for better matches for routes which are abnormally off-schedule.
 
+*** You can visually test the gtfs<->gps matchings using the OSMViz package,
+*** available at http://cbick.github.com/osmviz .
+*** Once you have OSMViz, go to the core/src/ directory and look at 
+*** the visualizer.py file. By editing the query at the end of the file
+*** (inside the "if __name__ == '__main__'" clause), you can choose what
+*** to visualize. Run "python visualizer.py" and enjoy the show.
 
 
 7. Get ready to analyze
