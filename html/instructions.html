@@ -1,0 +1,229 @@
+<html>
+
+<head>
+<title>GPS-to-GTFS Instructions</title>
+<link rel="stylesheet" type="text/css" href="css.css"/>
+</head>
+
+
+<body>
+<iframe src ="nav.html" id="nav">
+  <p>Your browser does not support iframes. Navigate from <a href="nav.html">here</a>.</p>
+</iframe>
+<h2>Instructions</h2>
+<hr>
+These are step-by-step instructions on how to match your AVL data to a GTFS schedule. (AVL means Automatic Vehicle Location, a less specific term for GPS bus tracking data)
+
+<h3>Prerequisites</h3>
+
+You will need:
+<ul>
+<li>a SQL database in which you can make tables and such
+<li>Python
+<li>Python module for accessing your database
+<li>gtfs_SQL_importer tool available <a href="http://cbick.github.com/gtfs_SQL_importer">here</a>
+<li>GTFS data for your agency imported into the database using the above
+<li>This software
+</ul>
+
+If you are missing any of the first 3:
+<ul>
+<li>I recommend <a href="http://www.postgres.org">PostgreSQL</a>. It can be a pain to set up but handles very nicely.
+<li>Get python <a href="http://www.python.org">here</a>. I used version 2.5.x when creating this software.
+<li>You can find python modules for your database <a href="http://wiki.python.org/moin/DatabaseInterfaces">here</a>.
+<li>If you have PostgreSQL I recommend you get <a href="http://initd.org/pub/software/psycopg/">psycopg2</a>.
+</ul>
+
+
+<h3>1. Set up python database access</h3>
+
+<p>
+If you're using postgres or other socket-communicating db server, then in the config folder there is a file called db.config.example. Make a copy of this file called db.config and edit it appropriately. 
+</p>
+
+<p>
+If you're using anything other than postgres, modify common/src/dbutils.py to handle your DBMS (shouldn't be difficult).
+</p>
+
+
+<h3>2. Create the schema for bus tracking data</h3>
+
+<p>
+From the core/sql folder, apply the make_tables.sql file to you database.
+</p>
+
+
+<h3>3. Pull the bus tracking data into the DB</h3>
+
+<p>
+It is up to you to figure out how to do this for your particular
+data source. From the perspective of Python, the goal is to get 
+your data points into the format requested by the update_routes() 
+method inside the core/sql/dbqueries.py file. Otherwise, you will
+need to fit your data into the db scheme, in particular into the
+vehicle_track table that was created in step 2.
+</p>
+
+<p>
+<b>To grab San Francisco Muni tracking data</b> you can just use the code
+that is already provided in the nextmuni_import directory. This is
+set up to pull the data directly from the nextmuni xml service.
+</p>
+
+To use it, follow these steps:
+
+<h4>3.1. Fix erroneous SFMuni GTFS data</h4>
+<p>       
+       From the nextmuni_import/sql directory, apply the change_sf_gtfs.sql
+       file.
+</p>
+
+<h4>3.2. Insert correct routeid/dirtag matchup data</h4>
+<p>
+       From the nextmuni_import/sql directory, apple the populate_rid_dirtag.sql
+       file.
+</p>
+
+<h4>3.3. Set up a job to collect the data</h4>
+<p>
+       Essentially, you want to run the python script found at
+       nextmuni_import/src/route_scraper.py to run every 1 minute
+       (or however often you choose), giving it "ALL" as an
+       argument:
+</p>
+<pre><code>       python route_scraper.py ALL </code></pre>
+<p>       
+       To get this to run every minute, the easiest thing is to set up
+       a cron job. You're on your own to figure this out, or to figure
+       out any method to have this run on a regular basis.
+</p>
+
+<p><b>
+NOTE: Before you choose how to provide data to the db, see step 4.2 below.
+</b></p>
+
+
+<h3>4. Do some pre-matchup setup</h3>
+<p>
+Now that there is tracking data in your database, you probably want to
+match that to the GTFS schedule, since you are using this package. To
+do this you first need to do some preprocessing.
+</p>
+
+<h4>4.1. From the core/src directory, run the following</h4>
+
+<pre><code>  python Preprocessing.py trips </code></pre>
+<p>
+This separates the tracking data into distinct routes and trips.
+</p>
+
+<h4>4.2. Populate routeid_dirtag table</h4>
+<p>For this there are two options:</p>
+<p>
+  <b>a)</b> Populate the routeid_dirtag table manually. (This was already done
+     in step 3 if you imported data from San Francisco Muni). The idea
+     is to match NextBus' "dirtag" values up with GTFS route ID's.
+     The reason to do this manually is that NextBus and GTFS both are
+     riddled with errors that you may or may not have caught yet. 
+</p>
+<p><b>NOTE: If you aren't using a NextBus data source, then you must choose 
+    what to do depending on what you provided for the dirtag field in
+    step 3.
+</b></p>
+
+<p>
+  <b>b)</b> Try to automatically populate the routeid_dirtag table. This will not
+     always work, since as I said in (a) there are lots of data errors over
+     which I have no control nor which do I have any method to detect.
+     You can do this as follows (from core/src directory):
+</p>
+
+<pre><code>     python Preprocessing.py populate_ridtags </code></pre>
+
+<p>
+     Before you do this though you might want to check out the results
+     from the following SQL queries:
+</p>
+<pre><code>
+     select count(*), route_short_name as cnt from gtf_routes 
+       group by route_short_name having count(*) > 1;
+
+     select count(distinct routetag) from vehicle_track 
+       where dirtag != 'null' and routetag != 'null'
+       group by dirtag having count(distinct routetag) > 1;
+</pre></code>
+<p>     
+     If there are 0 results then you are in good shape. If there are a lot
+     of results then you are not in so good shape, and should give serious
+     consideration to (a). The data I currently have for SF Muni returns
+     121 rows for the second query.
+</p>
+
+<h3>5. Match GPS data to GTFS schedules (hoorah!)</h3>
+
+<p><b>
+NOTE: You might want to selectively apply some of the indexes found in
+the core/sql/make_table_indexes.sql file, before doing the following.
+</b></p>
+
+From the core/src directory, run:
+
+<pre><code>  python Preprocessing.py match_trips </code></pre>
+
+You have now successfully matched the trips from 4.1 to GTFS scheduled trips.
+Now, run:
+
+<pre><code>  python Preprocessing.py gps_schedules</code></pre>
+
+<p>
+This populates the data telling you the actual schedule that each GPS trip
+followed (i.e., when each bus actually arrived at each stop). Specifically,
+this data is put into the gps_stop_times table (compare to gtf_stop_times).
+</p>
+
+
+<h3>6. Make some corrections</h3>
+
+<p>
+Some situations can result in erroneous assignments after following step 5. 
+To fix these, run 
+</p>
+
+<pre><code>  python Preprocessing.py fix_earlybirds </code></pre>
+
+<p>
+This searches for better matches for routes which are abnormally off-schedule.
+</p>
+
+
+<p><b>
+You can visually test the gtfs<->gps matchings using the OSMViz package,
+available <a href="http://cbick.github.com/osmviz">here</a>.
+Once you have OSMViz, go to the core/src/ directory and look at 
+the visualizer.py file. By editing the query at the end of the file
+(inside the "if __name__ == '__main__'" clause), you can choose what
+to visualize. Run "python visualizer.py" and enjoy the show.
+</b></p>
+
+
+<h3>7. Get ready to analyze</h3>
+<p>
+From the core/sql folder, you will want to apply the make_table_indexes.sql
+file to your database. This will make all future analyses much much faster.
+</p>
+
+
+<h3>8. Analyze</h3>
+<p>
+There is some postprocessing/analysis code in the postprocessing directory.
+The postprocessing/sql directory holds code for creating a summary table of
+bus lateness data, as well as some various queries that were useful to me
+when exploring the data. The postprocessing/src directory holds the Stats.py
+file which performs a bunch of statistical analysis and makes plots of the data,
+but it requires the <a href="http://www.scipy.org">SciPy</a> and <a href="matplotlib.sourceforge.net">Matplotlib</a> libraries.
+</p>
+
+</body>
+
+
+</html>

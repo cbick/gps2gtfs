@@ -1,0 +1,75 @@
+<html>
+<head>
+
+<title>GPS to GTFS matchup</title>
+<link rel="stylesheet" type="text/css" href="css.css"/>
+
+</head>
+
+<body>
+
+<iframe src ="nav.html" id="nav">
+  <p>Your browser does not support iframes. Navigate from <a href="nav.html">here</a>.</p>
+</iframe>
+  <h2>GPS to GTFS matchup</h2>
+  <hr>
+<table border=0 width=70%>
+<tr>
+
+<td width=50% valign=top> 
+
+<h3>A suite of Python and SQL tools for matching GPS bus data to GTFS data.</h3>
+
+
+<p>
+At the moment gps2gtfs is a more-or-less scattered collection of tools which you
+can use to match AVS (Automatic Vehicle Location, aka GPS tracking) data of public transportation vehicles with their GTFS schedule counterparts.
+</p>
+
+<p>
+If you are here to work with San Francisco Muni data, then a set of tools for recording and working with that data is included in this package. Otherwise, you will have to do a little bit of work to get your data into the database in the correct way (there are instructions for what you want to do).
+</p>
+
+<p>
+gps2gtfs is released under the <a href="http://www.opensource.org/licenses/mit-license.php">MIT license</a>.
+</p>
+
+<h3>Using gps2gtfs</h3>
+<p>
+The <a href="doc.html">docs</a> page will bring you to API docs for the nice python interfaces that have been built as tools on top of the database data. However they are not very self-explanatory when it comes to the question of, "How do I use this to analyze my data?"
+</p>
+
+<p>
+Therefore the instructions <a href="instructions.html">here</a> give you step-by-step instructions to get you to the point where you can actually use your data.
+</p>
+
+
+
+<h3>Links</h3>
+<a href="http://cbick.github.com/gtfs_SQL_importer">GTFS to SQL importer</a>
+<br>
+<a href="http://wiki.python.org/moin/DatabaseInterfaces">Python DB Modules</a>
+<br>
+<a href="http://www.postgresql.org">PostgreSQL</a>
+<br>
+<a href="http://initd.org/pub/software/psycopg">psycopg</a>
+<br>
+<a href="http://cbick.github.com/osmviz">OSMViz</a>
+
+</td>
+<td align=right valign=top>
+
+<img src="images/buses_moving2.jpg" border=1><br>
+Some buses in San Francisco.<br>
+<img src="images/trainusa2.jpg" border=1><br>
+All aboard!
+
+</td>
+
+</tr>
+
+
+</table>
+
+</body>
+</html>
