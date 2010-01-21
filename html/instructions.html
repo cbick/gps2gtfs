@@ -7,9 +7,11 @@
 
 
 <body>
+<div id="wrapper">
 <iframe src ="nav.html" id="nav">
   <p>Your browser does not support iframes. Navigate from <a href="nav.html">here</a>.</p>
 </iframe>
+<div id="content" style="">
 <h2>Instructions</h2>
 <hr>
 These are step-by-step instructions on how to match your AVL data to a GTFS schedule. (AVL means Automatic Vehicle Location, a less specific term for GPS bus tracking data)
@@ -222,7 +224,8 @@ when exploring the data. The postprocessing/src directory holds the Stats.py
 file which performs a bunch of statistical analysis and makes plots of the data,
 but it requires the <a href="http://www.scipy.org">SciPy</a> and <a href="matplotlib.sourceforge.net">Matplotlib</a> libraries.
 </p>
-
+</div><!--content-->
+</div><!--wrapper-->
 </body>
 
 
