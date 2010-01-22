@@ -14,8 +14,14 @@ def read_config(fname):
     ret[key] = val;
   return ret;
 
-config_file = "../../config/db.config"
-db_params = read_config(config_file);
+config_file = "config/db.config"
+for i in range(5):
+  try:
+    db_params = read_config(config_file);
+  except:
+    config_file = "../" + config_file
+    continue
+  break
 
 conn = None
 SDHandler = None
