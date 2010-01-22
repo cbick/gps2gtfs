@@ -695,3 +695,26 @@ def get_route_names():
   return ret
 
 
+def populate_routeid_dirtag(deletefirst=False):
+  """
+  Populates routeid_dirtag table with all distinct instances of 
+  (routeid,dirtag) from the vehicle tracking data table joined with
+  the gtfs routes table.
+  If deletefirst is true, then the routeid_dirtag table is truncated
+  first.
+  """
+  cur = get_cursor()
+  if deletefirst:
+    SQLExec(cur,"""truncate routeid_dirtag""")
+
+  SQLExec(cur,"""
+insert into routeid_dirtag
+(select distinct route_id,dirtag from vehicle_track vt inner join gtf_routes gr
+on vt.routetag = gr.route_short_name
+where vt.dirtag != 'null' and vt.dirtag is not null)
+""")
+
+  cur.close()
+
+
+

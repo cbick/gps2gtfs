@@ -223,8 +223,10 @@ def auto_populate_rid_dirtags():
   Automatically determines matchup between dirtags and route ID's.
   This is done by joining the GPS tracking data table's routetag
   field with the GTFS route table's route_short_name field.  
+  This just calls a database function.
   """
-  
+  db.populate_routeid_dirtag(True);
+  db.commit()
   
 
 
