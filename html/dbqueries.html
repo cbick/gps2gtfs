@@ -1,0 +1,251 @@
+
+<!doctype html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module dbqueries</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>dbqueries</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/javacolin/dev/transit/gps2gtfs/core/src/dbqueries.py">/Users/javacolin/dev/transit/gps2gtfs/core/src/dbqueries.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="datetime.html">datetime</a><br>
+</td><td width="25%" valign=top><a href="posixpath.html">posixpath</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-correct_gps_schedule"><strong>correct_gps_schedule</strong></a>(segment_id, trip_id, gtfs_error, offset_seconds, gps_data)</dt></dl>
+ <dl><dt><a name="-export_gps_route"><strong>export_gps_route</strong></a>(trip_id, trip_date, segment_id, vehicle_id, gtfs_error, offset_seconds, gps_data, segment_exists<font color="#909090">=False</font>)</dt><dd><tt>Writes&nbsp;the&nbsp;given&nbsp;entry&nbsp;to&nbsp;the&nbsp;"tracked_routes"&nbsp;table.&nbsp;This&nbsp;table&nbsp;is&nbsp;used<br>
+to&nbsp;cache&nbsp;the&nbsp;results&nbsp;of&nbsp;finding&nbsp;and&nbsp;filtering&nbsp;only&nbsp;the&nbsp;valid&nbsp;routes&nbsp;as<br>
+represented&nbsp;in&nbsp;the&nbsp;GPS&nbsp;dataset.<br>
+&nbsp;<br>
+trip_id:&nbsp;the&nbsp;GTFS&nbsp;trip&nbsp;id<br>
+trip_date:&nbsp;the&nbsp;date&nbsp;of&nbsp;the&nbsp;trip<br>
+segment_id:&nbsp;unique&nbsp;identifier&nbsp;for&nbsp;this&nbsp;GPS&nbsp;segment&nbsp;(see&nbsp;<a href="#-getMaxSegID">getMaxSegID</a>())<br>
+vehicle_id:&nbsp;as&nbsp;reported&nbsp;in&nbsp;the&nbsp;GPS&nbsp;data<br>
+gtfs_error:&nbsp;The&nbsp;distance&nbsp;from&nbsp;the&nbsp;matched&nbsp;GTFS&nbsp;trip&nbsp;as&nbsp;measured&nbsp;by<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;GPSBusTrack&nbsp;metric<br>
+offset_seconds:&nbsp;Number&nbsp;of&nbsp;seconds&nbsp;to&nbsp;subtract&nbsp;from&nbsp;GTFS&nbsp;trip&nbsp;to&nbsp;normalize.<br>
+&nbsp;<br>
+gps_data:&nbsp;A&nbsp;list&nbsp;of&nbsp;(lat,&nbsp;lon,&nbsp;reported_update_time)&nbsp;values,&nbsp;exactly&nbsp;as<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reported&nbsp;in&nbsp;the&nbsp;GPS&nbsp;dat.&nbsp;Note&nbsp;that&nbsp;reported_update_time&nbsp;should<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;be&nbsp;a&nbsp;timestamp.<br>
+&nbsp;<br>
+WARNING:&nbsp;No&nbsp;effort&nbsp;is&nbsp;made&nbsp;to&nbsp;prevent&nbsp;duplicate&nbsp;entries!&nbsp;If&nbsp;you&nbsp;do&nbsp;this<br>
+more&nbsp;than&nbsp;once&nbsp;for&nbsp;the&nbsp;same&nbsp;route&nbsp;then&nbsp;YOU&nbsp;MUST&nbsp;DELETE&nbsp;IT&nbsp;FIRST!</tt></dd></dl>
+ <dl><dt><a name="-export_gps_schedule"><strong>export_gps_schedule</strong></a>(segment_id, schedule)</dt><dd><tt>Given&nbsp;a&nbsp;gps&nbsp;segment&nbsp;ID&nbsp;and&nbsp;a&nbsp;list&nbsp;of&nbsp;dictlike&nbsp;rows&nbsp;having&nbsp;the&nbsp;keys:<br>
+&nbsp;&nbsp;'stop_id',&nbsp;GTFS&nbsp;stop&nbsp;ID<br>
+&nbsp;&nbsp;'stop_sequence',&nbsp;GTFS&nbsp;trip&nbsp;stop&nbsp;sequence<br>
+&nbsp;&nbsp;'stop_headsign',&nbsp;<br>
+&nbsp;&nbsp;'pickup_type',<br>
+&nbsp;&nbsp;'drop_off_type',<br>
+&nbsp;&nbsp;'shape_dist_traveled',<br>
+&nbsp;&nbsp;'timepoint',<br>
+&nbsp;&nbsp;'arrival_time_seconds',&nbsp;time&nbsp;in&nbsp;seconds&nbsp;into&nbsp;day<br>
+&nbsp;&nbsp;'departure_time_seconds',&nbsp;time&nbsp;in&nbsp;seconds&nbsp;into&nbsp;day<br>
+&nbsp;&nbsp;'actual_arrival_time_seconds',&nbsp;actual&nbsp;arrival&nbsp;in&nbsp;seconds&nbsp;into&nbsp;day<br>
+&nbsp;&nbsp;'actual_departure_time_seconds'&nbsp;actual&nbsp;departure&nbsp;in&nbsp;seconds&nbsp;into&nbsp;day<br>
+&nbsp;&nbsp;'seconds_since_last_stop'&nbsp;time&nbsp;elapsed&nbsp;since&nbsp;arrival&nbsp;at&nbsp;previous&nbsp;stop<br>
+&nbsp;&nbsp;<br>
+exports&nbsp;the&nbsp;rows&nbsp;appropriately&nbsp;into&nbsp;the&nbsp;database.</tt></dd></dl>
+ <dl><dt><a name="-export_trip_information"><strong>export_trip_information</strong></a>(trip_id, first_arrive, first_depart, trip_length, trip_duration)</dt><dd><tt>Given&nbsp;a&nbsp;GTFS&nbsp;trip&nbsp;ID,&nbsp;the&nbsp;time&nbsp;(in&nbsp;seconds)&nbsp;of&nbsp;its&nbsp;first&nbsp;arrival&nbsp;and<br>
+departure,&nbsp;the&nbsp;length&nbsp;of&nbsp;the&nbsp;whole&nbsp;trip&nbsp;in&nbsp;meters,&nbsp;and&nbsp;the&nbsp;duration<br>
+of&nbsp;the&nbsp;trip&nbsp;in&nbsp;seconds,&nbsp;pushes&nbsp;it&nbsp;to&nbsp;the&nbsp;database.</tt></dd></dl>
+ <dl><dt><a name="-export_trip_stop_information"><strong>export_trip_stop_information</strong></a>(trip_id, stop_sequence, stop_number, prev_stop_distance, cumulative_distance, prev_stop_travel_time)</dt><dd><tt>Given&nbsp;a&nbsp;GTFS&nbsp;trip&nbsp;ID&nbsp;and&nbsp;stop&nbsp;sequence&nbsp;number,&nbsp;the&nbsp;number&nbsp;of&nbsp;this&nbsp;stop&nbsp;<br>
+along&nbsp;the&nbsp;route,&nbsp;the&nbsp;distance&nbsp;from&nbsp;the&nbsp;previous&nbsp;stop&nbsp;to&nbsp;this&nbsp;stop&nbsp;in&nbsp;meters,<br>
+the&nbsp;cumulative&nbsp;distance&nbsp;from&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;trip&nbsp;to&nbsp;this&nbsp;stop&nbsp;in<br>
+meters,&nbsp;and&nbsp;the&nbsp;time&nbsp;in&nbsp;seconds&nbsp;it&nbsp;takes&nbsp;(according&nbsp;to&nbsp;the&nbsp;schedule)&nbsp;to<br>
+get&nbsp;to&nbsp;this&nbsp;stop&nbsp;from&nbsp;the&nbsp;previous&nbsp;stop,&nbsp;pushes&nbsp;it&nbsp;to&nbsp;the&nbsp;database.</tt></dd></dl>
+ <dl><dt><a name="-getGTFSRouteData"><strong>getGTFSRouteData</strong></a>(route_id)</dt><dd><tt>Given&nbsp;a&nbsp;route&nbsp;ID,&nbsp;returns&nbsp;a&nbsp;row&nbsp;from&nbsp;the&nbsp;GTFS&nbsp;table&nbsp;as&nbsp;a&nbsp;dict-like&nbsp;type.<br>
+Keys:<br>
+'route_long_name',<br>
+'route_type',<br>
+'route_text_color',<br>
+'route_color',<br>
+'agency_id',<br>
+'route_id',<br>
+'route_url',<br>
+'route_desc',<br>
+'route_short_name'</tt></dd></dl>
+ <dl><dt><a name="-getGTFSTripData"><strong>getGTFSTripData</strong></a>(trip_id)</dt><dd><tt>Given&nbsp;a&nbsp;trip&nbsp;ID,&nbsp;returns&nbsp;(trip_header,&nbsp;trip,&nbsp;shape),<br>
+where&nbsp;trip_header&nbsp;is&nbsp;a&nbsp;row&nbsp;from&nbsp;the&nbsp;GTFS&nbsp;table,<br>
+Keys:<br>
+'block_id',<br>
+'route_id',<br>
+'direction_id',<br>
+'trip_headsign',<br>
+'shape_id',<br>
+'service_id',<br>
+'trip_id',<br>
+'trip_short_name'<br>
+&nbsp;<br>
+trip&nbsp;is&nbsp;a&nbsp;list&nbsp;of&nbsp;rows&nbsp;holding&nbsp;info&nbsp;about&nbsp;each&nbsp;stop&nbsp;along&nbsp;the&nbsp;route<br>
+(The&nbsp;order&nbsp;of&nbsp;the&nbsp;rows&nbsp;in&nbsp;trip&nbsp;is&nbsp;the&nbsp;order&nbsp;of&nbsp;the&nbsp;stops&nbsp;along&nbsp;the&nbsp;route),<br>
+Keys:<br>
+'stop_sequence',<br>
+'parent_station',<br>
+'trip_id',<br>
+'pickup_type',<br>
+'stop_headsign',<br>
+'arrival_time_seconds',<br>
+'stop_name',<br>
+'departure_time_seconds',<br>
+'stop_timezone',<br>
+'timepoint',<br>
+'arrival_time',<br>
+'stop_url',<br>
+'stop_id',<br>
+'stop_desc',<br>
+'location_type',<br>
+'departure_time',<br>
+'stop_code',<br>
+'stop_lat',<br>
+'zone_id',<br>
+'stop_lon',<br>
+'shape_dist_traveled',<br>
+'drop_off_type'<br>
+&nbsp;<br>
+and&nbsp;shape&nbsp;is&nbsp;a&nbsp;list&nbsp;of&nbsp;rows&nbsp;holding&nbsp;info&nbsp;about&nbsp;the&nbsp;geometry&nbsp;traversed&nbsp;by<br>
+the&nbsp;route.<br>
+Keys:<br>
+'shape_pt_lat',<br>
+'shape_id',<br>
+'shape_pt_lon',<br>
+'shape_pt_sequence',<br>
+'shape_dist_traveled'</tt></dd></dl>
+ <dl><dt><a name="-getMaxSegID"><strong>getMaxSegID</strong></a>()</dt><dd><tt>Returns&nbsp;the&nbsp;largest&nbsp;vehicle&nbsp;segment&nbsp;ID&nbsp;found&nbsp;in&nbsp;the&nbsp;"tracked_routes"<br>
+table&nbsp;(see&nbsp;the&nbsp;export_gps_route&nbsp;function&nbsp;below).&nbsp;This&nbsp;can&nbsp;be&nbsp;used&nbsp;to<br>
+construct&nbsp;a&nbsp;unique&nbsp;ID&nbsp;for&nbsp;further&nbsp;segments.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;there&nbsp;should&nbsp;be&nbsp;a&nbsp;1-1&nbsp;correspondence&nbsp;between&nbsp;segment&nbsp;and<br>
+trip&nbsp;IDs&nbsp;for&nbsp;any&nbsp;particular&nbsp;service&nbsp;day.&nbsp;Of&nbsp;course&nbsp;part&nbsp;of&nbsp;the&nbsp;point<br>
+of&nbsp;this&nbsp;is&nbsp;to&nbsp;eliminate&nbsp;any&nbsp;cases&nbsp;where&nbsp;this&nbsp;is&nbsp;not&nbsp;true&nbsp;in&nbsp;a&nbsp;meaningful<br>
+way.</tt></dd></dl>
+ <dl><dt><a name="-get_all_trip_ids"><strong>get_all_trip_ids</strong></a>()</dt></dl>
+ <dl><dt><a name="-get_best_matching_trip_ID"><strong>get_best_matching_trip_ID</strong></a>(route_id, dir_id, start_date, start_time, num_results<font color="#909090">=1</font>)</dt><dd><tt>Given&nbsp;GTFS&nbsp;route&nbsp;and&nbsp;direction&nbsp;IDs,&nbsp;a&nbsp;datetime.date&nbsp;object&nbsp;representing<br>
+the&nbsp;day&nbsp;of&nbsp;the&nbsp;route,&nbsp;and&nbsp;start_time&nbsp;an&nbsp;integer&nbsp;representing&nbsp;the&nbsp;begin&nbsp;<br>
+time&nbsp;of&nbsp;the&nbsp;route&nbsp;as&nbsp;seconds&nbsp;into&nbsp;the&nbsp;day,&nbsp;returns&nbsp;a&nbsp;list&nbsp;of&nbsp;the<br>
+num_results&nbsp;best&nbsp;matching&nbsp;GTFS&nbsp;trips,&nbsp;in&nbsp;order&nbsp;of&nbsp;best&nbsp;matching&nbsp;start<br>
+datetime.<br>
+Each&nbsp;item&nbsp;in&nbsp;the&nbsp;list&nbsp;is&nbsp;of&nbsp;the&nbsp;form:<br>
+&nbsp;&nbsp;(trip_id,&nbsp;offset_seconds)<br>
+where&nbsp;trip_id&nbsp;is&nbsp;the&nbsp;GTFS&nbsp;trip&nbsp;ID,&nbsp;and&nbsp;offset_seconds&nbsp;represents&nbsp;the<br>
+offset&nbsp;(in&nbsp;seconds)&nbsp;that&nbsp;need&nbsp;be&nbsp;applied&nbsp;to&nbsp;the&nbsp;trip&nbsp;for&nbsp;any&nbsp;times&nbsp;<br>
+in&nbsp;the&nbsp;format&nbsp;of&nbsp;"seconds&nbsp;into&nbsp;day."&nbsp;This&nbsp;is&nbsp;necessary&nbsp;because<br>
+sometimes&nbsp;the&nbsp;best&nbsp;matching&nbsp;trip&nbsp;will&nbsp;come&nbsp;from&nbsp;the&nbsp;previous&nbsp;day's<br>
+service&nbsp;schedule,&nbsp;and&nbsp;so&nbsp;you&nbsp;will&nbsp;need&nbsp;to&nbsp;subtract&nbsp;1&nbsp;day&nbsp;=&nbsp;86400&nbsp;seconds<br>
+from&nbsp;the&nbsp;times&nbsp;for&nbsp;that&nbsp;bus.<br>
+&nbsp;<br>
+For&nbsp;example,&nbsp;a&nbsp;bus&nbsp;running&nbsp;at&nbsp;3am&nbsp;might&nbsp;be&nbsp;from&nbsp;today's&nbsp;schedule&nbsp;at<br>
+03:00,&nbsp;or&nbsp;it&nbsp;might&nbsp;be&nbsp;from&nbsp;yesterday's&nbsp;schedule&nbsp;at&nbsp;27:00.&nbsp;If&nbsp;a&nbsp;match<br>
+is&nbsp;found&nbsp;for&nbsp;03:00&nbsp;today,&nbsp;then&nbsp;the&nbsp;offset&nbsp;returned&nbsp;is&nbsp;0.&nbsp;If&nbsp;a&nbsp;match<br>
+is&nbsp;found&nbsp;for&nbsp;27:00&nbsp;yesterday,&nbsp;then&nbsp;the&nbsp;offset&nbsp;returned&nbsp;is&nbsp;86400.</tt></dd></dl>
+ <dl><dt><a name="-get_direction_for_dirtag"><strong>get_direction_for_dirtag</strong></a>(dirtag)</dt><dd><tt>Given&nbsp;a&nbsp;nextbus&nbsp;dirtag,&nbsp;returns&nbsp;the&nbsp;GTFS&nbsp;direction&nbsp;ID</tt></dd></dl>
+ <dl><dt><a name="-get_previous_trip_ID"><strong>get_previous_trip_ID</strong></a>(trip_id, start_date, offset, numtrips<font color="#909090">=10</font>)</dt><dd><tt>Given&nbsp;GTFS&nbsp;trip&nbsp;ID,&nbsp;the&nbsp;date&nbsp;it&nbsp;ran&nbsp;on,&nbsp;and&nbsp;the&nbsp;schedule's&nbsp;offset&nbsp;in&nbsp;seconds,<br>
+finds&nbsp;the&nbsp;immediately&nbsp;previous&nbsp;GTFS&nbsp;trip&nbsp;ID&nbsp;with&nbsp;the&nbsp;same&nbsp;direction&nbsp;and&nbsp;<br>
+route.&nbsp;The&nbsp;start_date&nbsp;is&nbsp;necessary&nbsp;in&nbsp;cases&nbsp;close&nbsp;to&nbsp;midnight.</tt></dd></dl>
+ <dl><dt><a name="-get_route_dirtags"><strong>get_route_dirtags</strong></a>(route_short_name)</dt><dd><tt>Given&nbsp;the&nbsp;short&nbsp;name&nbsp;for&nbsp;a&nbsp;route,&nbsp;returns&nbsp;a&nbsp;list&nbsp;of&nbsp;dirtags<br>
+which&nbsp;are&nbsp;associated&nbsp;with&nbsp;that&nbsp;route.</tt></dd></dl>
+ <dl><dt><a name="-get_route_for_dirtag"><strong>get_route_for_dirtag</strong></a>(dirtag)</dt><dd><tt>Given&nbsp;a&nbsp;nextbus&nbsp;dirtag,&nbsp;returns&nbsp;the&nbsp;GTFS&nbsp;route&nbsp;ID</tt></dd></dl>
+ <dl><dt><a name="-get_route_names"><strong>get_route_names</strong></a>()</dt></dl>
+ <dl><dt><a name="-get_segment_IDs"><strong>get_segment_IDs</strong></a>(scheduled_only<font color="#909090">=True</font>)</dt></dl>
+ <dl><dt><a name="-get_serviceIDs_for_date"><strong>get_serviceIDs_for_date</strong></a>(date)</dt><dd><tt>Given&nbsp;a&nbsp;datetime.date&nbsp;object,&nbsp;returns&nbsp;a&nbsp;list&nbsp;of&nbsp;GTFS&nbsp;service&nbsp;ID's<br>
+active&nbsp;for&nbsp;that&nbsp;date.</tt></dd></dl>
+ <dl><dt><a name="-get_shapes_for_route"><strong>get_shapes_for_route</strong></a>(route_short_name)</dt><dd><tt>Given&nbsp;a&nbsp;route&nbsp;short&nbsp;name,&nbsp;returns&nbsp;a&nbsp;list&nbsp;of&nbsp;dictlike&nbsp;rows<br>
+containing&nbsp;the&nbsp;shapes&nbsp;associated&nbsp;with&nbsp;that&nbsp;route,&nbsp;sorted&nbsp;in<br>
+order&nbsp;of&nbsp;ascending&nbsp;shape&nbsp;ID&nbsp;then&nbsp;ascending&nbsp;shape&nbsp;point&nbsp;sequence.<br>
+Keys:<br>
+'shape_id',<br>
+'shape_pt_lat',<br>
+'shape_pt_lon',<br>
+'shape_pt_sequence',<br>
+'shape_dist_traveled',<br>
+'dirtag'</tt></dd></dl>
+ <dl><dt><a name="-get_vehicle_reports"><strong>get_vehicle_reports</strong></a>(dirtags)</dt><dd><tt>Given&nbsp;a&nbsp;list&nbsp;of&nbsp;dirtags,&nbsp;returns&nbsp;a&nbsp;list&nbsp;of&nbsp;dictlike&nbsp;rows&nbsp;of&nbsp;<br>
+vehicle&nbsp;tracking&nbsp;reports,&nbsp;sorted&nbsp;in&nbsp;ascending&nbsp;order&nbsp;of&nbsp;update&nbsp;time.<br>
+Keys:<br>
+'id',<br>
+'lat',<br>
+'lon',<br>
+'routetag',<br>
+'dirtag',<br>
+'reported_update_time'</tt></dd></dl>
+ <dl><dt><a name="-load_gps_route"><strong>load_gps_route</strong></a>(segment_id)</dt><dd><tt>Given&nbsp;a&nbsp;segment&nbsp;ID,&nbsp;loads&nbsp;the&nbsp;associated&nbsp;trip&nbsp;from&nbsp;the&nbsp;tracked_routes&nbsp;table<br>
+in&nbsp;order&nbsp;of&nbsp;increasing&nbsp;report&nbsp;time.&nbsp;<br>
+&nbsp;<br>
+Returns&nbsp;(trip_id,&nbsp;trip_date,&nbsp;vehicle_id,&nbsp;schedule_error,&nbsp;offset,&nbsp;route)<br>
+where&nbsp;trip_id&nbsp;is&nbsp;the&nbsp;gtfs&nbsp;trip&nbsp;ID,&nbsp;trip_date&nbsp;is&nbsp;the&nbsp;date&nbsp;on&nbsp;whose&nbsp;schedule<br>
+the&nbsp;trip&nbsp;took&nbsp;place,&nbsp;vehicle_id&nbsp;is&nbsp;the&nbsp;gps&nbsp;vehicle's&nbsp;ID,&nbsp;schedule_error<br>
+is&nbsp;the&nbsp;measured&nbsp;error&nbsp;between&nbsp;the&nbsp;GPS&nbsp;route&nbsp;and&nbsp;the&nbsp;GTFS&nbsp;schedule,&nbsp;offset&nbsp;<br>
+is&nbsp;the&nbsp;number&nbsp;of&nbsp;seconds&nbsp;to&nbsp;substract&nbsp;from&nbsp;any&nbsp;GTFS&nbsp;schedule&nbsp;times,&nbsp;and<br>
+route&nbsp;is&nbsp;a&nbsp;list&nbsp;of&nbsp;[lat,lon,reported_update_time]&nbsp;triples.</tt></dd></dl>
+ <dl><dt><a name="-load_gps_schedule"><strong>load_gps_schedule</strong></a>(segment_id)</dt><dd><tt>Given&nbsp;a&nbsp;segment_id,&nbsp;loads&nbsp;the&nbsp;corresponding&nbsp;arrival&nbsp;schedule&nbsp;from&nbsp;the<br>
+gps_stop_times&nbsp;table&nbsp;in&nbsp;the&nbsp;database.<br>
+&nbsp;<br>
+Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;dictlike&nbsp;rows,&nbsp;each&nbsp;with&nbsp;the&nbsp;following&nbsp;keys:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'stop_id'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'stop_sequence'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'stop_headsign'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pickup_type'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'drop_off_type',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'shape_dist_traveled',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'timepoint',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'arrival_time_seconds',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'departure_time_seconds',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'actual_arrival_time_seconds'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'seconds_since_last_stop'<br>
+&nbsp;<br>
+The&nbsp;rows&nbsp;will&nbsp;be&nbsp;in&nbsp;order&nbsp;of&nbsp;increasing&nbsp;stop&nbsp;sequence.</tt></dd></dl>
+ <dl><dt><a name="-load_gps_segment_header"><strong>load_gps_segment_header</strong></a>(segment_id)</dt><dd><tt>Given&nbsp;a&nbsp;segment&nbsp;ID,&nbsp;returns:<br>
+&nbsp;&nbsp;&nbsp;(trip_id,trip_date,vehicle_id,schedule_error,offset)<br>
+where&nbsp;trip_id&nbsp;is&nbsp;the&nbsp;gtfs&nbsp;trip&nbsp;ID,&nbsp;trip_date&nbsp;is&nbsp;the&nbsp;date&nbsp;on&nbsp;whose&nbsp;schedule<br>
+the&nbsp;trip&nbsp;took&nbsp;place,&nbsp;vehicle_id&nbsp;is&nbsp;the&nbsp;gps&nbsp;vehicle's&nbsp;ID,&nbsp;schedule_error<br>
+is&nbsp;the&nbsp;measured&nbsp;error&nbsp;between&nbsp;the&nbsp;GPS&nbsp;route&nbsp;and&nbsp;the&nbsp;GTFS&nbsp;schedule,&nbsp;and&nbsp;<br>
+offset&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;seconds&nbsp;to&nbsp;substract&nbsp;from&nbsp;any&nbsp;GTFS&nbsp;schedule&nbsp;times.</tt></dd></dl>
+ <dl><dt><a name="-populate_routeid_dirtag"><strong>populate_routeid_dirtag</strong></a>(deletefirst<font color="#909090">=False</font>)</dt><dd><tt>Populates&nbsp;routeid_dirtag&nbsp;table&nbsp;with&nbsp;all&nbsp;distinct&nbsp;instances&nbsp;of&nbsp;<br>
+(routeid,dirtag)&nbsp;from&nbsp;the&nbsp;vehicle&nbsp;tracking&nbsp;data&nbsp;table&nbsp;joined&nbsp;with<br>
+the&nbsp;gtfs&nbsp;routes&nbsp;table.<br>
+If&nbsp;deletefirst&nbsp;is&nbsp;true,&nbsp;then&nbsp;the&nbsp;routeid_dirtag&nbsp;table&nbsp;is&nbsp;truncated<br>
+first.</tt></dd></dl>
+ <dl><dt><a name="-update_routes"><strong>update_routes</strong></a>(vehicle_data)</dt><dd><tt>Inserts&nbsp;GPS&nbsp;tracking&nbsp;data&nbsp;into&nbsp;the&nbsp;database.<br>
+Vehicle&nbsp;data&nbsp;is&nbsp;a&nbsp;list&nbsp;of&nbsp;dicts&nbsp;mapping&nbsp;attributes&nbsp;to&nbsp;values.<br>
+Attributes&nbsp;can&nbsp;be&nbsp;the&nbsp;following:<br>
+&nbsp;<br>
+&nbsp;&nbsp;id&nbsp;--&nbsp;the&nbsp;vehicle&nbsp;id&nbsp;(string)<br>
+&nbsp;&nbsp;routeTag&nbsp;--&nbsp;the&nbsp;route&nbsp;id&nbsp;(string)<br>
+&nbsp;&nbsp;dirTag&nbsp;--&nbsp;identifier&nbsp;for&nbsp;the&nbsp;route&nbsp;direction&nbsp;(string)<br>
+&nbsp;&nbsp;lat&nbsp;--&nbsp;latitude&nbsp;of&nbsp;the&nbsp;vehicle&nbsp;(float)<br>
+&nbsp;&nbsp;lon&nbsp;--&nbsp;longitude&nbsp;of&nbsp;the&nbsp;vehicle&nbsp;(float)<br>
+&nbsp;&nbsp;secsSinceReport&nbsp;--&nbsp;how&nbsp;old&nbsp;the&nbsp;data&nbsp;was&nbsp;upon&nbsp;recording&nbsp;time&nbsp;(integer)<br>
+&nbsp;&nbsp;predictable&nbsp;--&nbsp;i&nbsp;have&nbsp;no&nbsp;idea&nbsp;what&nbsp;this&nbsp;field&nbsp;means,&nbsp;ask&nbsp;nextbus&nbsp;(string)<br>
+&nbsp;&nbsp;heading&nbsp;--&nbsp;the&nbsp;direction&nbsp;the&nbsp;bus&nbsp;is&nbsp;moving&nbsp;(integer&nbsp;--&nbsp;degrees?)<br>
+&nbsp;&nbsp;update_time&nbsp;--&nbsp;the&nbsp;recording&nbsp;time&nbsp;(when&nbsp;this&nbsp;data&nbsp;was&nbsp;retrieved)&nbsp;(timestamp)<br>
+&nbsp;<br>
+Of&nbsp;the&nbsp;above,&nbsp;update_time&nbsp;and&nbsp;secsSinceReport&nbsp;are&nbsp;required.&nbsp;If&nbsp;you<br>
+don't&nbsp;have&nbsp;any&nbsp;value&nbsp;for&nbsp;secsSinceReport&nbsp;then&nbsp;put&nbsp;in&nbsp;a&nbsp;0.&nbsp;If&nbsp;you&nbsp;don't<br>
+have&nbsp;any&nbsp;value&nbsp;for&nbsp;update_time&nbsp;then&nbsp;what&nbsp;exactly&nbsp;are&nbsp;you&nbsp;trying&nbsp;to<br>
+accomplish?</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>SDHandler</strong> = &lt;ServiceDateHandler.ServiceDateHandler object at 0x1037df0&gt;<br>
+<strong>dbdir</strong> = '/Library/Frameworks/Python.framework/Versions/Current/bin/../../common/src/'<br>
+<strong>mydir</strong> = '/Library/Frameworks/Python.framework/Versions/Current/bin'</td></tr></table>
+</body></html>
