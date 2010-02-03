@@ -21,16 +21,26 @@ There is no build or install so there are no build or install instructions.
 </p>
 
 <p>
+If you haven't done so already, you probably want to first try following the <a href="instructions.html">instructions</a> which handle most of the programming for you. If you want to use the internals in your own weird or modified way, however, then you will want to browse the docs below (which are generated straight from the source code).
+</p>
+
+<p>
+The overarching idea is to construct a GPSBusTrack.GPSBusSchedule object for each bus trip, from which you can extract the matched schedule as well as the actual arrival times. To do so, however, you need to first split your tracking data into segments (each corresponding to a trip); this is done by constructing a GPSDataTools.Route object for each route name in your system, and calling the GPSDataTools.Route.export_segments() method.
+</p>
+
+<p>
 There are API docs for the following:
 <ul>
 <li><a href="BusTrack.html">BusTrack</a> - Interface defining a vehicle in motion as defined by locations and times
-<li><a href="GPSBusTrack.html">GPSBusTrack</a> - BusTrack subclass representing a GPS-tracked vehicle
-<li><a href="GTFSBusTrack.html">GTFSBusTrack</a> - BusTrack subclass representing the theoretical route of a vehicle, as defined by its schedule
+<li><a href="GPSBusTrack.html">GPSBusTrack</a> - BusTrack subclasses representing a GPS-tracked vehicle
+<li><a href="GTFSBusTrack.html">GTFSBusTrack</a> - BusTrack subclasses representing the theoretical route of a vehicle, as defined by its schedule
 <li><a href="GPSDataTools.html">GPSDataTools</a> - Tools for manipulating raw tracking data
 <li><a href="dbqueries.html">dbqueries</a> - SQL queries defined for interaction with the database
 
 </ul>
 </p>
+
+
 
 
 </div><!--content-->
