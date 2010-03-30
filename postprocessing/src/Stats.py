@@ -410,7 +410,7 @@ def diffmeanCI(d1,d2,weighted=False,alpha=.05):
 
 
 def compare_ecdfs(attrsplit,rows,
-                  plot_CIs=True,
+                  plot_CIs=False,
                   plot_Es=False,
                   plot_E_CIs=False,
                   col_name='lateness',
@@ -723,6 +723,7 @@ select service_id,date_part('dow',trip_date) as wday,
   scheduled_hour_of_arrival as hoa, stop_number, 
   total_num_stops-stop_number as stops_before_end, total_num_stops, 
   (100*stop_number::numeric/total_num_stops)::int as route_portion, 
+  vehicle_type,
   lateness, trip_stop_weight 
 from datamining_table 
   natural join trip_stop_weights 
@@ -732,6 +733,7 @@ from datamining_table
               group by trip_id) ns 
     on ns.trip_id = datamining_table.gtfs_trip_id 
 where lateness is not null
+and stop_number > 0
 """
 
 
