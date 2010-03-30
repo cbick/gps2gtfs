@@ -8,26 +8,10 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>GPSDataTools</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/javacolin/dev/transit/gps2gtfs/core/src/GPSDataTools.py">/Users/javacolin/dev/transit/gps2gtfs/core/src/GPSDataTools.py</a></font></td></tr></table>
-    <p><tt>#&nbsp;Copyright&nbsp;(c)&nbsp;2010&nbsp;Colin&nbsp;Bick,&nbsp;Robert&nbsp;Damphousse<br>
-#<br>
-#&nbsp;Permission&nbsp;is&nbsp;hereby&nbsp;granted,&nbsp;free&nbsp;of&nbsp;charge,&nbsp;to&nbsp;any&nbsp;person&nbsp;obtaining&nbsp;a&nbsp;copy<br>
-#&nbsp;of&nbsp;this&nbsp;software&nbsp;and&nbsp;associated&nbsp;documentation&nbsp;files&nbsp;(the&nbsp;"Software"),&nbsp;to&nbsp;deal<br>
-#&nbsp;in&nbsp;the&nbsp;Software&nbsp;without&nbsp;restriction,&nbsp;including&nbsp;without&nbsp;limitation&nbsp;the&nbsp;rights<br>
-#&nbsp;to&nbsp;use,&nbsp;copy,&nbsp;modify,&nbsp;merge,&nbsp;publish,&nbsp;distribute,&nbsp;sublicense,&nbsp;and/or&nbsp;sell<br>
-#&nbsp;copies&nbsp;of&nbsp;the&nbsp;Software,&nbsp;and&nbsp;to&nbsp;permit&nbsp;persons&nbsp;to&nbsp;whom&nbsp;the&nbsp;Software&nbsp;is<br>
-#&nbsp;furnished&nbsp;to&nbsp;do&nbsp;so,&nbsp;subject&nbsp;to&nbsp;the&nbsp;following&nbsp;conditions:<br>
-#<br>
-#&nbsp;The&nbsp;above&nbsp;copyright&nbsp;notice&nbsp;and&nbsp;this&nbsp;permission&nbsp;notice&nbsp;shall&nbsp;be&nbsp;included&nbsp;in<br>
-#&nbsp;all&nbsp;copies&nbsp;or&nbsp;substantial&nbsp;portions&nbsp;of&nbsp;the&nbsp;Software.<br>
-#<br>
-#&nbsp;THE&nbsp;SOFTWARE&nbsp;IS&nbsp;PROVIDED&nbsp;"AS&nbsp;IS",&nbsp;WITHOUT&nbsp;WARRANTY&nbsp;OF&nbsp;ANY&nbsp;KIND,&nbsp;EXPRESS&nbsp;OR<br>
-#&nbsp;IMPLIED,&nbsp;INCLUDING&nbsp;BUT&nbsp;NOT&nbsp;LIMITED&nbsp;TO&nbsp;THE&nbsp;WARRANTIES&nbsp;OF&nbsp;MERCHANTABILITY,<br>
-#&nbsp;FITNESS&nbsp;FOR&nbsp;A&nbsp;PARTICULAR&nbsp;PURPOSE&nbsp;AND&nbsp;NONINFRINGEMENT.&nbsp;IN&nbsp;NO&nbsp;EVENT&nbsp;SHALL&nbsp;THE<br>
-#&nbsp;AUTHORS&nbsp;OR&nbsp;COPYRIGHT&nbsp;HOLDERS&nbsp;BE&nbsp;LIABLE&nbsp;FOR&nbsp;ANY&nbsp;CLAIM,&nbsp;DAMAGES&nbsp;OR&nbsp;OTHER<br>
-#&nbsp;LIABILITY,&nbsp;WHETHER&nbsp;IN&nbsp;AN&nbsp;ACTION&nbsp;OF&nbsp;CONTRACT,&nbsp;TORT&nbsp;OR&nbsp;OTHERWISE,&nbsp;ARISING&nbsp;FROM,<br>
-#&nbsp;OUT&nbsp;OF&nbsp;OR&nbsp;IN&nbsp;CONNECTION&nbsp;WITH&nbsp;THE&nbsp;SOFTWARE&nbsp;OR&nbsp;THE&nbsp;USE&nbsp;OR&nbsp;OTHER&nbsp;DEALINGS&nbsp;IN<br>
-#&nbsp;THE&nbsp;SOFTWARE.</tt></p>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/colin/colin_dev/transit/gps2gtfs/core/src/GPSDataTools.py">/Users/colin/colin_dev/transit/gps2gtfs/core/src/GPSDataTools.py</a></font></td></tr></table>
+    <p><tt>GPSDataTools.py:&nbsp;Utilities&nbsp;and&nbsp;class&nbsp;definitions&nbsp;for&nbsp;dealing&nbsp;with&nbsp;raw&nbsp;GPS&nbsp;tracking&nbsp;data.<br>
+&nbsp;<br>
+In&nbsp;general&nbsp;one&nbsp;is&nbsp;only&nbsp;interested&nbsp;in&nbsp;the&nbsp;<a href="#Route">Route</a>&nbsp;class,&nbsp;which&nbsp;loads&nbsp;GPS&nbsp;data&nbsp;from&nbsp;the&nbsp;database&nbsp;for&nbsp;a&nbsp;particular&nbsp;route&nbsp;and&nbsp;automatically&nbsp;turns&nbsp;it&nbsp;into&nbsp;individual&nbsp;trips.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -83,7 +67,11 @@ Data descriptors defined here:<br>
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="Route">class <strong>Route</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
     
-<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Represents&nbsp;the&nbsp;set&nbsp;of&nbsp;vehicle&nbsp;trips&nbsp;belonging&nbsp;to&nbsp;a&nbsp;particular&nbsp;route.<br>
+Upon&nbsp;initialization,&nbsp;all&nbsp;VehicleReports&nbsp;are&nbsp;found&nbsp;for&nbsp;that&nbsp;route,<br>
+and&nbsp;subsequently&nbsp;segmented&nbsp;into&nbsp;appropriate&nbsp;VehicleSegments.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Route-__init__"><strong>__init__</strong></a>(self, route_short_name)</dt></dl>
 
@@ -168,7 +156,9 @@ Data descriptors defined here:<br>
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="VehicleReport">class <strong>VehicleReport</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
     
-<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>POD&nbsp;structure&nbsp;representing&nbsp;a&nbsp;single&nbsp;row&nbsp;in&nbsp;the&nbsp;GPS&nbsp;log.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="VehicleReport-__init__"><strong>__init__</strong></a>(self, id, lat, lon, routetag, dirtag, reported_update_time)</dt></dl>
 
@@ -188,7 +178,10 @@ Data descriptors defined here:<br>
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="VehicleSegment">class <strong>VehicleSegment</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
     
-<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;list&nbsp;of&nbsp;VehicleReports,&nbsp;representing&nbsp;a&nbsp;single&nbsp;trip&nbsp;made&nbsp;by<br>
+a&nbsp;vehicle.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="VehicleSegment-__init__"><strong>__init__</strong></a>(self, reports)</dt></dl>
 
