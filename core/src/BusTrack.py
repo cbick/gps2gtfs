@@ -1,3 +1,8 @@
+"""
+BusTrack.py: Interface definition for a BusTrack object
+
+"""
+
 # Copyright (c) 2010 Colin Bick, Robert Damphousse
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,7 +23,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-### Interface definition for a BusTrack object
+
+
 import gisutils as gis
 from math import sqrt
 

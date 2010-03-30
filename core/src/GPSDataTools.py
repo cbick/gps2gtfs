@@ -1,3 +1,9 @@
+"""
+GPSDataTools.py: Utilities and class definitions for dealing with raw GPS tracking data.
+
+In general one is only interested in the Route class, which loads GPS data from the database for a particular route and automatically turns it into individual trips.
+"""
+
 # Copyright (c) 2010 Colin Bick, Robert Damphousse
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,6 +44,9 @@ def now():
 
 
 class VehicleReport(object):
+  """
+  POD structure representing a single row in the GPS log.
+  """
   def __init__(self,id,lat,lon,routetag,dirtag,reported_update_time):
     self.vehicle_id = id
     self.lat = lat
@@ -52,6 +61,10 @@ class VehicleReport(object):
     return s + 60*( m + 60*h )
 
 class VehicleSegment(object):
+  """
+  A list of VehicleReports, representing a single trip made by
+  a vehicle.
+  """
   def __init__(self,reports):
     self.reports = reports
     self.dirtag = reports[-1].dirtag
@@ -150,6 +163,11 @@ class GShape(object):
     self.dirtag = ''
 
 class Route(object):
+  """
+  Represents the set of vehicle trips belonging to a particular route.
+  Upon initialization, all VehicleReports are found for that route,
+  and subsequently segmented into appropriate VehicleSegments.
+  """
   def __init__(self,route_short_name):
     self.route_short_name = str(route_short_name)
     self.dirtags=[]

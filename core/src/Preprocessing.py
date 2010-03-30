@@ -1,3 +1,19 @@
+"""
+Here we implement the preprocessing methods necessary to mine the
+bus tracking data. The fundamental step is to determine when a bus
+arrives at a stop, and when it _should_ have arrived.
+
+Due to the size of the dataset, it's best to select a somewhat
+representative subset spanning the available time period. In other
+words we'll pick just a few routes of different types and analyze
+their data for every day available.
+
+The difficulties inherent with matching GPS data with GTFS data,
+deciding when a GPS bus has arrived at a stop, and filtering out
+faulty GPS data are all dealt with in the GPSBusTrack code, and
+we will make fair use of it here.
+"""
+
 # Copyright (c) 2010 Colin Bick, Robert Damphousse
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,21 +34,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""
-Here we implement the preprocessing methods necessary to mine the
-bus tracking data. The fundamental step is to determine when a bus
-arrives at a stop, and when it _should_ have arrived.
 
-Due to the size of the dataset, it's best to select a somewhat
-representative subset spanning the available time period. In other
-words we'll pick just a few routes of different types and analyze
-their data for every day available.
-
-The difficulties inherent with matching GPS data with GTFS data,
-deciding when a GPS bus has arrived at a stop, and filtering out
-faulty GPS data are all dealt with in the GPSBusTrack code, and
-we will make fair use of it here.
-"""
 
 import dbqueries as db
 import gisutils as gis
