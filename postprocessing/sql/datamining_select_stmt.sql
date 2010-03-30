@@ -19,6 +19,13 @@ select gst.gps_segment_id,
        gst.actual_arrival_time_seconds-departure_time_seconds as lateness,
        gst.seconds_since_last_stop as seconds_since_last_stop,
        gst.prev_stop_id as prev_stop_id,
+       CASE 
+         WHEN gst.arrival_time_seconds < 0 
+	  THEN (gst.arrival_time_seconds+86400)/3600
+         WHEN gst.arrival_time_seconds >= 86400 
+	  THEN (gst.arrival_time_seconds-86400)/3600
+         ELSE gst.arrival_time_seconds/3600
+       END as scheduled_hour_of_arrival,
 
        tinfo.first_arrival-gsegs.schedule_offset_seconds
          as sched_trip_start_time,
