@@ -1,13 +1,18 @@
 """
-GPSBusTrack.py: Class definitions pertaining to the processing of GPS tracking data.
+GPSBusTrack.py: Class definitions pertaining to the processing of 
+GPS tracking data.
 
 These include:
 
-GPSBusSchedule -- Matches GPS data to a given GTFS schedule, producing actual arrival time data. 
+GPSBusSchedule -- Matches GPS data to a given GTFS schedule, producing actual 
+arrival time data. 
 
-GPSSchedule -- Lighweight representation of results from GPSBusSchedule matchup; used to load cached GPSBusSchedule results from database.
+GPSSchedule -- Lighweight representation of results from GPSBusSchedule matchup;
+used to load cached GPSBusSchedule results from database.
 
-GPSBusTrack -- A BusTrack object which interpolates the bus route between recorded lat/lon points from a GPS log. Provides a set of very useful methods for matching tracking data to the GTFS schedule.
+GPSBusTrack -- A BusTrack object which interpolates the bus route between 
+recorded lat/lon points from a GPS log. Provides a set of very useful methods 
+for matching tracking data to the GTFS schedule.
 
 """
 

@@ -1,7 +1,10 @@
 """
-GPSDataTools.py: Utilities and class definitions for dealing with raw GPS tracking data.
+GPSDataTools.py: Utilities and class definitions for dealing with raw GPS 
+tracking data.
 
-In general one is only interested in the Route class, which loads GPS data from the database for a particular route and automatically turns it into individual trips.
+In general one is only interested in the Route class, which loads GPS data 
+from the database for a particular route and automatically turns it into 
+individual trips.
 """
 
 # Copyright (c) 2010 Colin Bick, Robert Damphousse

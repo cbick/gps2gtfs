@@ -3,9 +3,12 @@ GTFSBusTrack.py: Class definitions for working with GTFS schedule data.
 
 These include:
 
-GTFSBusSchedule -- A lightweight BusTrack representing a scheduled trip which takes timetable schedule data at face value and applies no processing.
+GTFSBusSchedule -- A lightweight BusTrack representing a scheduled trip which 
+takes timetable schedule data at face value and applies no processing.
 
-GTFSBusTrack -- A BusTrack (also representing a scheduled trip) that applies more involved processing and heuristics to the data provided by the GTFS schedule, including shape data.
+GTFSBusTrack -- A BusTrack (also representing a scheduled trip) that applies 
+more involved processing and heuristics to the data provided by the GTFS 
+schedule, including shape data.
 
 
 """
