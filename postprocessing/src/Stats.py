@@ -159,7 +159,7 @@ def expected_wait_time_random_arrival(xdata,wdata,headway,
   for a person arriving at the stop at random.
 
   This function requires R-Vectors because otherwise a memory leak
-  in the r2py package causes major problems if you call this function
+  in the rpy2 package causes major problems if you call this function
   multiple times.
   """
   total_waits = 0.0
@@ -245,13 +245,14 @@ def expected_wait_time_simulation(xdata,wdata,arrival_x,headway,
 
   print "Simulating..."
 
-  for iter in range(nsims):
-    latenesses = samples[iter*samples_per_sim:(iter+1)*samples_per_sim]
+  samples.resize( nsims, samples_per_sim )
+  samples += arange(-ntrips,ntrips+1)*headway
+  samples.sort()
+  #total_waits += sum( ravel(samples)[find(samples >= arrival_x)]
 
+  for arrivals in samples:
     # arrivals are the arrival times of all the buses relative
     # to the scheduled time of the central trip.
-    arrivals = latenesses + arange(-ntrips,ntrips+1)*headway
-    arrivals.sort()
     try:
       wait_time = arrivals[find(arrivals >= arrival_x)[0]] - arrival_x
       total_waits += wait_time

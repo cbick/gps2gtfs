@@ -2,7 +2,6 @@
 Creates plots/data as appearing in paper submitted to JPT
 """
 
-import scipy
 import Stats
 import dbutils as db
 from Stats import DM
@@ -10,7 +9,7 @@ from Stats import DM
 
 # shorthand
 split = DM.split_on_attributes
-array = scipy.array
+array = Stats.array
 
 def rows_to_data(rows):
     return array([(r['lateness'], r['trip_stop_weight']) for r in rows]);
