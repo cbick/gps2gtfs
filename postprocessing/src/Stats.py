@@ -65,66 +65,88 @@ def E(data,weighted=False,alpha=0.05):
 
 
 
-def probability_make_transfer_sim(xdata,wdata,transfer_window,
-                                  nsims = 100000):
+def probability_make_transfer_sim(xdata1,wdata1,
+                                  xdata2,wdata2,
+                                  transfer_window, nsims = 100000):
   """
-  Given R-Vector xdata representing instances and R-vector wdata
-  representing weighted probabilities of those instances (need not
-  add to 1, can be None for equal probability), and the
+  Given R-Vectors xdata1, xdata2 representing instances of the first
+  and second vehicle of the transfer, respectively, and R-vectors wdata1
+  and wdata2 representing their respective weighted probabilities (need not
+  sum to 1, can be None for equal probability), and the
   transfer window in seconds (that is, the scheduled time between
-  the arrival of two buses), calculates via siimulation the
+  the arrival of the first and second buses), calculates via simulation the
   probability that you will make that transfer.
   """
   total_made = 0
   total_num = 0
 
   print "Sampling..."
-  samples_per_sim = 2
-  rref = R.r['sample'](xdata, nsims*samples_per_sim, replace = True,
-                       prob = wdata)
-  samples = array(rref)
-  del rref
+  rref1 = R.r['sample'](xdata1, nsims, replace = True,
+                        prob = wdata1)
+  rref2 = R.r['sample'](xdata2, nsims, replace = True,
+                        prob=wdata2);
+  samples = array(zip(rref1,rref2))
+  del rref1
+  del rref2
+
   print "Done."
 
   print "Simulating..."
-  for iter in xrange(nsims):
-    arrivals = samples[iter*samples_per_sim:(iter+1)*samples_per_sim]
-
-    if arrivals[0] <= (arrivals[1]+transfer_window):
-      total_made += 1
-    total_num += 1
+  total_made = sum(samples[:,0] <= (samples[:,1]+transfer_window));
 
   print "Done."
-  return float(total_made)/total_num
+  del samples
+  return float(total_made)/nsims
 
 
-def p_make_transfer_vs_window(data,windows=linspace(-300,900,16),weighted=True):
+def p_make_transfer_vs_window(data1,data2=None,
+                              windows=linspace(-300,900,16),weighted=True,
+                              doplot=True):
   """
   Given optionally weighted lateness data and a set of transfer windows
   (in seconds), plots the likelihood of making a transfer against
   transfer window. Returns results.
+  
+  data1 represents the lateness distribution of the first bus, while
+  data2 represents that of the second bus. The transfer is made from
+  the first bus to the second. If data2 is identical to data1, then
+  pass in None for data2; this saves memory.
   """
 
-  xdata = R.FloatVector(data[:,0])
+  xdata2 = wdata1 = wdata2 = None
+
+  xdata1 = R.FloatVector(data1[:,0])
   if weighted:
-    wdata = R.FloatVector(data[:,1])
-  else:
-    wdata = None
+    wdata1 = R.FloatVector(data1[:,1])
+
+  if(data2 is not None):
+    xdata2 = R.FloatVector(data2[:,0])
+    if weighted:
+      wdata2 = R.FloatVector(data2[:,1])
 
   probs=[]
 
   for window in windows:
-     prob = probability_make_transfer_sim(xdata,wdata,window)
+     prob = probability_make_transfer_sim(xdata1,wdata1,
+                                          xdata2 or xdata1,wdata2 or wdata1,
+                                          window)
      probs.append(prob)
      
   probs = array(probs)
-  figure()
-  plot(windows,probs,'k-',label="P(make transfer)")
-  #legend()
-  xlabel("Transfer window (s)")
-  ylabel("Probability of making transfer")
-  title("Probability of making transfer vs transfer windows")
-  return probs
+
+  if doplot:
+    figure()
+    plot(windows,probs,'k-',label="P(make transfer)")
+    #legend()
+    xlabel("Transfer window (s)")
+    ylabel("Probability of making transfer")
+    title("Probability of making transfer vs transfer windows")
+  del xdata1
+  del xdata2
+  del wdata1
+  del wdata2
+
+  return array(zip(windows,probs))
 
 
 def expected_wait_time_random_arrival(xdata,wdata,headway,
@@ -183,6 +205,8 @@ def calc_expected_wait_time_for_random_arrival(data,headways,weighted=True):
     ew = expected_wait_time_random_arrival(xdata,wdata,headway)
     print headway,ew
     ret[headway]=ew
+  del xdata
+  del wdata
   return ret
 
 
@@ -274,6 +298,8 @@ def expected_wait_vs_arrival_plot(data,headways,min_arrival,
   ylabel("Expected Wait Time")
   title("Expected Wait Times vs Headway, Arrival")
   f.savefig(ofile)
+  del xdata
+  del wdata
   return ret
 
 
@@ -951,11 +977,17 @@ def measure_slowness_correlation(rows=None):
       n += 1
 
   print "Calculating correlation..."
-  corr = R.r['cor'](R.FloatVector(prev_stds[:n]),
-                    R.FloatVector(stds[:n]))
+  Rpstds = R.FloatVector(prev_stds[:n])
+  Rstds = R.FloatVector(stds[:n])
+  corr = R.r['cor'](Rpstds,
+                    Rstds)
   rows.close()
+  corr_ret = array(corr)
+  del corr
+  del Rpstds
+  del Rstds
 
-  return corr,prev_stds,stds
+  return corr_ret,prev_stds,stds
 
 
 
