@@ -87,8 +87,6 @@ def probability_make_transfer_sim(xdata1,wdata1,
   rref2 = R.r['sample'](xdata2, nsims, replace = True,
                         prob=wdata2);
   samples = array(zip(rref1,rref2))
-  del rref1
-  del rref2
 
   print "Done."
 
@@ -96,7 +94,7 @@ def probability_make_transfer_sim(xdata1,wdata1,
   total_made = sum(samples[:,0] <= (samples[:,1]+transfer_window));
 
   print "Done."
-  del samples
+
   return float(total_made)/nsims
 
 
@@ -106,7 +104,8 @@ def p_make_transfer_vs_window(data1,data2=None,
   """
   Given optionally weighted lateness data and a set of transfer windows
   (in seconds), plots the likelihood of making a transfer against
-  transfer window. Returns results.
+  transfer window. Returns Nx2 array of results, where N is the number
+  of windows; first column is the window, second column is the probability.
   
   data1 represents the lateness distribution of the first bus, while
   data2 represents that of the second bus. The transfer is made from
@@ -142,10 +141,7 @@ def p_make_transfer_vs_window(data1,data2=None,
     xlabel("Transfer window (s)")
     ylabel("Probability of making transfer")
     title("Probability of making transfer vs transfer windows")
-  del xdata1
-  del xdata2
-  del wdata1
-  del wdata2
+  
 
   return array(zip(windows,probs))
 
@@ -1050,9 +1046,6 @@ def measure_slowness_correlation(rows=None):
                     Rstds)
   rows.close()
   corr_ret = array(corr)
-  del corr
-  del Rpstds
-  del Rstds
 
   return corr_ret,prev_stds,stds
 
