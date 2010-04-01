@@ -50,7 +50,7 @@ portions = split( ('route_portion',), rows);
 ### Unconditioned plots (no splits) ###
 
 data = rows_to_data(rows)
-
+del rows
 
 ## ECDF plot ##
 
@@ -90,9 +90,10 @@ pot_overall = Stats.p_make_transfer_vs_window(data,doplot=True)
 
 ## Expected Wait Time vs Headways plot ##
 
-Stats.expected_wait_vs_arrival_plot(data, headways=(5*60,15*60,30*60,60*60),
-                                    min_arrival=-10*60, weighted=True,
-                                    ofile="simplot.png")
+headway_waits = Stats.expected_wait_vs_arrival_plot(
+    data, headways=(5*60,15*60,30*60,60*60),
+    min_arrival=-10*60, weighted=True,
+    ofile="simplot.png",q_half=None)
 
 
 del data
@@ -139,4 +140,15 @@ legend()
 
 ## Expected Wait Time Comparisons ##
 
+
+Stats.expected_wait_vs_arrival_plot(hoa_17, headways=(5*15,5*30),
+                                    min_arrival=-10*60, weighted=True,
+                                    ofile="ew_5pm.png")
+
+Stats.expected_wait_vs_arrival_plot(hoa_1, headways=(5*15,5*30),
+                                    min_arrival=-10*60, weighted=True,
+                                    ofile="ew_1am.png")
+
+
+## E/Q values ##
 

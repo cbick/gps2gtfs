@@ -20,10 +20,11 @@
 
 import dbutils as db
 import rpy2.robjects as R
+import time
 
 from pylab import *
 from scipy import stats,array,log,linalg,ones,sqrt,zeros,repeat,\
-    concatenate,dot
+    concatenate,dot,asarray
 
 import DataMining as DM
 
@@ -150,13 +151,20 @@ def p_make_transfer_vs_window(data1,data2=None,
 
 
 def expected_wait_time_random_arrival(xdata,wdata,headway,
-                                      nsims = 5000000, ntrips=3):
+                                      nsims = 5000000, ntrips=3,
+                                      q_half=None):
   """
   Given R-Vector xdata representing instances and R-Vector wdata
   representing weighted probabilities of those instances (need not
   add to 1, can be None for equal probability), and the headway in
   seconds of the bus, calculates via simulation the average wait time 
   for a person arriving at the stop at random.
+
+  Returns (expected_wait, (lowerq,upperq))
+  or just expected_wait, if q_half == None
+  
+  where expected_wait is the value as described above, and lowerq,upperq
+  are the upper and lower q_half quantiles, respectively.
 
   This function requires R-Vectors because otherwise a memory leak
   in the rpy2 package causes major problems if you call this function
@@ -165,31 +173,42 @@ def expected_wait_time_random_arrival(xdata,wdata,headway,
   total_waits = 0.0
   total_num = 0
 
-  print "Sampling..."
+  print "Sampling (r)..."
   samples_per_sim = 1+2*ntrips
   rref = R.r['sample'](xdata, nsims*samples_per_sim, replace = True,
                        prob = wdata)
-  samples = array(rref)
-  del rref
-  print "Done."
-
-  print "Simulating..."
-  for iter in xrange(nsims):
-    # your random arrival
-    arrival_x = int( random() * (headway+1) ) - headway/2
-
-    # the buses' random arrival
-    latenesses = samples[iter*samples_per_sim:(iter+1)*samples_per_sim]
-    arrivals = latenesses + arange(-ntrips,ntrips+1)*headway
-    arrivals.sort()
-    try:
-      wait_time = arrivals[find(arrivals >= arrival_x)[0]] - arrival_x
-      total_waits += wait_time
-      total_num += 1
-    except:
-      print "WARNING: If you see this message a lot you need more trips!!!"
+  samples = asarray(rref)
 
   print "Done."
+
+  print "Simulating (r)..."
+  timer = time.time()
+
+
+  arrival_x = amap(int, random(nsims) * (headway) ) - headway/2
+  arrival_x.resize((nsims,1))
+  samples.resize( nsims, samples_per_sim )
+  samples += arange(-ntrips,ntrips+1)*headway
+  samples -= arrival_x
+
+  wait_times = where(samples >= 0, samples, float('inf')).min(1)
+  valids = (wait_times != float('inf'))
+  wait_times = wait_times[valids]
+  total_waits = wait_times.sum()
+  total_num = valids.sum()
+
+  if q_half:
+    print "Finding quantiles (r)..."
+    del samples,valids,arrival_x,rref #make room if necessary
+    w_ecdf,p_ecdf,e_ecdf = ecdf(wait_times,weighted=False,alpha=0.05)
+    lowerq,p,j = find_quantile(q_half,w_ecdf,p_ecdf)
+    upperq,p,j = find_quantile(1.0-q_half,w_ecdf,p_ecdf)
+  
+  timer = time.time() - timer
+  print "Done (r):",timer
+  
+  if q_half:
+    return (total_waits/total_num), (lowerq,upperq)
   return total_waits/total_num
 
 def calc_expected_wait_time_for_random_arrival(data,headways,weighted=True):
@@ -205,19 +224,27 @@ def calc_expected_wait_time_for_random_arrival(data,headways,weighted=True):
     ew = expected_wait_time_random_arrival(xdata,wdata,headway)
     print headway,ew
     ret[headway]=ew
-  del xdata
-  del wdata
+
+
   return ret
 
 
 def expected_wait_time_simulation(xdata,wdata,arrival_x,headway,
-                                  nsims = 500000, ntrips=3):
+                                  nsims = 500000, ntrips=3,
+                                  q_half=None):
   """
   Given lateness data which is optionally weighted,
   the arrival time of one waiting for the bus, and the headway 
   for the route (i.e. the expected time between buses), computes
   by simulation the expected time that one will wait until a 
   bus arrives.
+
+  Returns:  (expected_wait_time, (lower_q,upper_q))
+  or just expected_wait_time if q_half == None.
+
+  where expected_wait_time is the value as described above, and
+  lower_q and upper_q are the lower and upper q_half quantiles,
+  respectively.
 
   xdata and wdata should be R Vectors!!! This is due to a memory leak
   in rpy2.
@@ -239,40 +266,62 @@ def expected_wait_time_simulation(xdata,wdata,arrival_x,headway,
   samples_per_sim = 1 + 2*ntrips
   rref = R.r['sample'](xdata, nsims * samples_per_sim,replace = True,
                        prob = wdata)
-  samples = array(rref)
-  del rref
+  samples = asarray(rref)
+
   print " done."
 
   print "Simulating..."
+  timer = time.time()
 
   samples.resize( nsims, samples_per_sim )
-  samples += arange(-ntrips,ntrips+1)*headway
-  samples.sort()
-  #total_waits += sum( ravel(samples)[find(samples >= arrival_x)]
+  samples += arange(-ntrips,ntrips+1)*headway - arrival_x
 
-  for arrivals in samples:
-    # arrivals are the arrival times of all the buses relative
-    # to the scheduled time of the central trip.
-    try:
-      wait_time = arrivals[find(arrivals >= arrival_x)[0]] - arrival_x
-      total_waits += wait_time
-      total_num += 1
-    except:
-      print "WARNING: If you see this message a lot you need more trips!!!"
+  wait_times = where(samples >= 0, samples, float('inf')).min(1)
+  valids = (wait_times != float('inf'))
+  wait_times = wait_times[valids]
+  total_waits = wait_times.sum()
+  total_num = valids.sum()
 
-  print " done."
+  if q_half:
+    print "Finding quantiles..."
+    del rref,samples,valids # make room if needed
+    w_ecdf, p_ecdf, e_ecdf = ecdf(wait_times,weighted=False,alpha=0.05)
+    q_bottom,p,j = find_quantile(q_half,w_ecdf,p_ecdf)
+    q_top,p,j = find_quantile(1.0-q_half,w_ecdf,p_ecdf)
+
+  timer = time.time()-timer
+  print " done:",timer
+
+  if q_half:
+    return (total_waits / total_num) , (q_bottom,q_top)
 
   return total_waits / total_num
   
 
 def expected_wait_vs_arrival_plot(data,headways,min_arrival,
-                                  weighted=True,ofile="simplot.png"):
+                                  weighted=True,doplot=True,
+                                  ofile="simplot.png",q_half=None):
   """
   Given an optionally weighted dataset, a set of headways (in seconds),
   and a minimum value for relative person arrival time (in seconds),
-  plots expected wait time for that person for each value of headway,
-  for personal arrival times from min_arrival to min_arrival+headway (i.e.
-  one period).
+  returns a dict with entry for each provided headway:
+    { headway : (arrivals, expected_waits, expected_wait_qbounds,
+                 expected_wait_random, expected_wait_random_qbound) }
+  
+  where:
+    arrivals is a list of rider arrival times
+    expected_waits is a list of the corresponding average wait times
+    expected_wait_qbounds is a list of the (upper,lower) quantiles of the wait times
+    expected_wait_random is the average wait time for a random rider arrival time
+    expected_wait_random_qbound is the (upper,lower) quantiles of the wait fime for a random rider arrival time.
+
+  The quantiles returned are the upper and lower q_half quantiles.
+  If q_half is None, then the return values are only
+    { headway : (arrivals, expected_waits, expected_wait_random) }  
+
+  If doplot is True, then plots expected wait time for that person for 
+  each value of headway, for personal arrival times from min_arrival 
+  to min_arrival+headway (i.e. one period).
   """
   xdata = R.FloatVector(data[:,0])
   if weighted:
@@ -284,23 +333,40 @@ def expected_wait_vs_arrival_plot(data,headways,min_arrival,
   for i,headway in enumerate(headways):
     print "Computing plot for headway",headway,"..."
     ew = []
-    arrivals=linspace(min_arrival,min_arrival+headway+60,15)
+    eb = []
+    arrivals=arange(min_arrival,min_arrival+headway+61,60)
     for arrival in arrivals:
-      ew.append(expected_wait_time_simulation(xdata,wdata,arrival,headway))
-    plot(arrivals,ew,pcolors[i],label="Headway="+str(headway))
-    ewrandom = expected_wait_time_random_arrival(xdata,wdata,headway)
-    plot( (arrivals[0],arrivals[-1]), (ewrandom,ewrandom),
-          pcolors[i]+"--",
-          label="For random arrival")
+      e_wait = expected_wait_time_simulation(xdata,wdata,arrival,
+                                             headway,q_half=q_half)
+      if q_half:
+        e_wait, e_bounds = e_wait
+        eb.append(e_bounds)
 
-    ret[headway] = ew,ewrandom
-  legend()
-  xlabel("Your Arrival")
-  ylabel("Expected Wait Time")
-  title("Expected Wait Times vs Headway, Arrival")
-  f.savefig(ofile)
-  del xdata
-  del wdata
+      ew.append(e_wait)
+
+    ewrandom = expected_wait_time_random_arrival(xdata,wdata,headway,
+                                                 q_half=q_half)
+    if q_half:
+      ewrandom, ewr_b = ewrandom
+      ret[headway] = arrivals,ew,eb,ewrandom,ewr_b
+    else:
+      ret[headway] = arrivals,ew,ewrandom
+
+
+  i=0
+  if doplot and not q_half:
+    for headway,(arrivals,ew,ewrandom) in ret.items():
+      plot(arrivals,ew,pcolors[i],label="Headway="+str(headway))
+      plot( (arrivals[0],arrivals[-1]), (ewrandom,ewrandom),
+            pcolors[i]+"--",
+            label="For random arrival")
+      i+=1
+
+    legend()
+    xlabel("Your Arrival")
+    ylabel("Expected Wait Time")
+    title("Expected Wait Times vs Headway, Arrival")
+    f.savefig(ofile)
   return ret
 
 
