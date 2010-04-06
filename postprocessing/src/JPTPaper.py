@@ -66,14 +66,14 @@ plot(x,p,'k-', label="ECDF")
 #plot(x,p+a_n,'k--', label="95% CI")
 #plot(x,p-a_n,'k--')
 
-plot((-2000,x_q),(p_q,p_q),'k:', label="5% Quantile")
-plot((x_q,x_q),(0,p_q),'k:')
+plot((-2000,E_bar),(E_p,E_p),'k-.', label="Expected Value")
+plot((E_bar,E_bar),(0,E_p),'k-.')
 
 plot((-2000,0),(zero_p,zero_p),'k--', label="On Time")
 plot((0,0),(0,zero_p),'k--')
 
-plot((-2000,E_bar),(E_p,E_p),'k-.', label="Expected Value")
-plot((E_bar,E_bar),(0,E_p),'k-.')
+plot((-2000,x_q),(p_q,p_q),'k:', label="5% Quantile")
+plot((x_q,x_q),(0,p_q),'k:')
 
 legend(loc=4)
 xlabel("Lateness (seconds)")
@@ -152,3 +152,20 @@ Stats.expected_wait_vs_arrival_plot(hoa_1, headways=(5*15,5*30),
 
 ## E/Q values ##
 
+q = .25
+vals = {}
+
+for (hour,),rows in weekday_hoas:
+    data = rows_to_data(rows)
+    x,p,a_n = Stats.ecdf(data,weighted=True)
+    q_lower,nil,nil = Stats.find_quantile(0.5-q,x,p)
+    q_upper,nil,nil = Stats.find_quantile(0.5+q,x,p)
+    med,nil,nil = Stats.find_quantile(0.5,x,p)
+    avg,avg_moe,nil = Stats.E(data,weighted=True)
+
+    vals[hour] = (q_lower,med,q_upper,avg, a_n,avg_moe)
+
+hours = sort(vals.keys())
+
+
+del rows,data
