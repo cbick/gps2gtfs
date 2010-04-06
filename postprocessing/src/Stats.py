@@ -383,25 +383,36 @@ def ecdf(data,weighted=False,alpha=0.05):
     (data_pt, weight)
   where weight is as defined in the Horvitz-Thompson estimate.
   """
+
+  cdf = {}
+
   if not weighted:
-    dcopy = array(data)
-    dcopy.sort()
-    n=len(data)
+    # give all elements weight of 1
+    data = concatenate( (data,ones((len(data),1))), axis=1 )
 
-    ret_x=repeat(dcopy,2)
-    ret_p=concatenate(zip(linspace(0.0,float(n-1)/n,n),linspace(1./n,1.0,n)))
-    a_n = sqrt( 1./(2*n) * log(2./alpha) )
+  def helper((x,p)):
+    cdf[x] = cdf.get(x,0.0) + p
 
-  else:
-    w_total = data[:,1].sum()
-    sort_order = data[:,0].argsort()
-    sorted = data[sort_order]
-    
-    ret_x = repeat(sorted[:,0],2)
-    ret_p = concatenate(( [0.0],
-                          repeat(1./w_total * cumsum(sorted[:-1,1]),2),
-                          [1.0] ))
-    a_n = sqrt( 1./(2*w_total) * log(2./alpha) )
+  print "  Uniqueifying..."
+  map(helper,data)
+
+  # data now has unique values
+  print "  Arraying..."
+  data = array(cdf.items())
+
+  print "  Weighting..."
+  w_total = data[:,1].sum()
+
+  print "  Sorting..."
+  sort_order = data[:,0].argsort()
+  sorted = data[sort_order]
+  
+  print "  Summing..."
+  ret_x = repeat(sorted[:,0],2)
+  ret_p = concatenate(( [0.0],
+                        repeat(1./w_total * cumsum(sorted[:-1,1]),2),
+                        [1.0] ))
+  a_n = sqrt( 1./(2*w_total) * log(2./alpha) )
 
   return ret_x,ret_p,a_n
 
