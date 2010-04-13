@@ -388,7 +388,7 @@ def ecdf(data,weighted=False,alpha=0.05):
 
   if not weighted:
     # give all elements weight of 1
-    data = concatenate( (data,ones((len(data),1))), axis=1 )
+    data = concatenate( (data.reshape(len(data),1),ones((len(data),1))), axis=1 )
 
   def helper((x,p)):
     cdf[x] = cdf.get(x,0.0) + p
@@ -447,6 +447,35 @@ def evaluate_ecdf(x0,x,p):
   else:
     i = i[-1]
   return (x[i],p[i],i)
+
+
+def QEPlot(datasets,qs,weighted=True):
+  """
+  Given a dictionary mapping label strings to optionally weighted data sets,
+  and a list of quantiles [q_1,q_2,...,q_n], plots the average and the given 
+  quantiles for each ECDF.
+  """
+  
+  Qs = {}
+  Es = {}
+
+  for name,data in datasets.items():
+    x,p,a_n = ecdf(data,weighted=weighted)
+    Q = []
+    for q in qs:
+      Q.append( find_quantile(q,x,p)[0] )
+    Qs[name] = array(Q)
+    Es[name] = E(data,weighted=weighted)
+
+  figure()
+  for name in datasets.keys():
+    Q = Qs[name]
+    avg = Es[name]
+
+    plot( Q, 'k-x', label=name )
+    plot( avg, 'ko', label=name)
+
+
 
 def find_pred_interval(x,p,a_n,alpha=0.05):
   """

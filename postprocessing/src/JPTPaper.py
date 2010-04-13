@@ -126,26 +126,26 @@ pot_17 = Stats.p_make_transfer_vs_window(hoa_17,doplot=False)
 pot_1 = Stats.p_make_transfer_vs_window(hoa_1,doplot=False)
 
 figure()
-plot(pot_overall[:,0],pot_overall[:,1],'g',label="Overall")
-plot(pot_8[:,0],pot_8[:,1],'k',label="8 am")
-plot(pot_12[:,0],pot_12[:,1],'k',label="Noon")
-plot(pot_17[:,0],pot_17[:,1],'k',label="5 pm")
-plot(pot_1[:,0],pot_1[:,1],'k',label="1 am")
+plot(pot_overall[:,0],pot_overall[:,1],label="Overall")
+plot(pot_8[:,0],pot_8[:,1],label="8 am")
+plot(pot_12[:,0],pot_12[:,1],label="Noon")
+plot(pot_17[:,0],pot_17[:,1],label="5 pm")
+plot(pot_1[:,0],pot_1[:,1],label="1 am")
 
 xlabel("Transfer window (s)")
 ylabel("Probability of making transfer")
 title("Probability of making transfer vs transfer windows")
-legend()
+legend(loc=4)
 
 
 ## Expected Wait Time Comparisons ##
 
 
-Stats.expected_wait_vs_arrival_plot(hoa_17, headways=(5*15,5*30),
+Stats.expected_wait_vs_arrival_plot(hoa_17, headways=(60*15,60*30),
                                     min_arrival=-10*60, weighted=True,
                                     ofile="ew_5pm.png")
 
-Stats.expected_wait_vs_arrival_plot(hoa_1, headways=(5*15,5*30),
+Stats.expected_wait_vs_arrival_plot(hoa_1, headways=(60*15,60*30),
                                     min_arrival=-10*60, weighted=True,
                                     ofile="ew_1am.png")
 
