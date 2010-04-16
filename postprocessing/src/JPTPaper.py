@@ -5,7 +5,7 @@ Creates plots/data as appearing in paper submitted to JPT
 import Stats
 import dbutils as db
 from Stats import DM
-
+import ExcelPrint as EP
 
 # shorthand
 split = DM.split_on_attributes
@@ -102,21 +102,35 @@ del data
 
 ### Hour of Weekday ###
 
-hoa_8 = rows_to_data(weekday_hoas[(8,)])
-hoa_12 = rows_to_data(weekday_hoas[(12,)])
-hoa_17 = rows_to_data(weekday_hoas[(17,)])
-hoa_1 = rows_to_data(weekday_hoas[(1,)])
+hoa_data = {}
+for i in range(24):
+  hoa_data[i] = rows_to_data(hoas[(i,)])
+
+weekday_hoa_data = {}
+for i in range(24):
+  weekday_hoa_data[i] = rows_to_data(weekday_hoas[(i,)])
+
+hoa_8 = weekday_hoa_data[8]
+hoa_17 = weekday_hoa_data[17]
+hoa_20 = weekday_hoa_data[20]
+hoa_1 = weekday_hoa_data[1]
 
 
 ## ECDF Comparisons ##
 
+#plot
 Stats.compare_ecdfs(None,{'8 am':hoa_8,
-                          'Noon':hoa_12,
                           '5 pm':hoa_17,
+                          '8 pm':hoa_20,
                           '1 am':hoa_1},
                     plot_CIs=False, plot_Es=False,
                     plot_E_CIs = False)
 
+#excel printout
+ecdfs = {}
+for whoa,data in weekday_hoa_data.items():
+    ecdfs[whoa] = Stats.ecdf(data,weighted=True);
+EP.copy(EP.print_ecdfs(ecdfs))
 
 ## Prob. of Transfer Comparisons ##
 

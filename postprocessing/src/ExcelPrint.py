@@ -10,6 +10,84 @@ def copy(txt):
   p.stdin.write(txt)
   p.stdin.close()
 
+
+def print_ecdf_annotations(ecdf,data,minx=-2000,weighted=True,delim="\t"):
+  """
+  Returns string of 'delim'-delimited printout. Assumes that
+  ecdf is of the form (x,p,a_n) as returned by the Stats.ecdf()
+  method, and that data is the (optionally weighted) data 
+  provided to the same.
+  """
+  import Stats
+
+  ret = ""
+
+  x,p,a_n = ecdf
+  E_bar,E_moe = Stats.E(data,weighted=weighted,alpha=0.05);
+  E_x,E_p,i = Stats.evaluate_ecdf(E_bar,x,p)
+  zero_x,zero_p,j = Stats.evaluate_ecdf(0.0,x,p)
+  x_q,p_q,i = Stats.find_quantile(0.05,x,p)
+  
+  ret += "x"+delim+"Expected Value\n"
+  ret += str(minx) + delim + str(E_p) + "\n"
+  ret += str(E_bar) + delim + str(E_p) + "\n"
+  ret += str(E_bar) + delim + str(0) + "\n"
+  ret += "\n"
+
+  ret += "x"+delim+"On Time\n"
+  ret += str(minx) + delim + str(zero_p) + "\n"
+  ret += str(0) + delim + str(zero_p) + "\n"
+  ret += str(0) + delim + str(0) + "\n"
+  ret += "\n"
+
+  ret += "x"+delim+"5% Quantile\n"
+  ret += str(minx) + delim + str(p_q) + "\n"
+  ret += str(x_q) + delim + str(p_q) + "\n"
+  ret += str(x_q) + delim + str(0) + "\n"
+  ret += "\n"
+
+  return ret
+
+
+def print_ecdfs(ecdfs,delim="\t"):
+  """
+  Returns string of 'delim'-delimited printout. Assumes the result
+  provided is of the form
+    { label : (x,p,a_n) }
+  where each (x,p,a_n) are as returned by the Stats.ecdf() method.
+  """
+
+  ret = ""
+
+  cols = array(ecdfs.keys())
+  cols.sort()
+
+  cols_per_series = 2
+
+  # Header
+  ret += (delim*(cols_per_series-1))
+  ret += (delim*cols_per_series).join(map(str,cols)) + "\n"
+
+  still_printing = list(cols)
+  i = 0
+
+  while still_printing:
+    for k in cols:
+      x,p,a_n = ecdfs[k]
+      if i >= len(x):
+        if k in still_printing: 
+          still_printing.remove(k)
+        ret += delim+delim
+      else:
+        ret += str(x[i]) + delim + str(p[i]) + delim
+
+    ret += "\n"
+    i += 1
+
+  return ret
+
+
+
 def print_expected_wait_vs_arrival(result,delim="\t"):
   """
   Returns string of 'delim'-delimited printout. Assumes the result provided
@@ -160,3 +238,6 @@ def print_histogram(result,delim="\t",weighted=True,bins=10,normed=False):
   ret += str(rows[-1]) + "\n"
 
   return ret
+
+
+
