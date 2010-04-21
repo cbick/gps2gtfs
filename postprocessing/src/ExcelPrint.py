@@ -11,6 +11,26 @@ def copy(txt):
   p.stdin.close()
 
 
+def print_QE_tables(Qs,Es,qs,delim="\t"):
+  """
+  Returns string of 'delim'-delimited printout. Assumes that
+  Qs,Es are of the form returned by the Stats.QEPlot method, and that
+  qs is the list of quantile percentages that were supplied to the same
+  method.
+  """
+
+  ret = ""
+
+  rows = array(Qs.keys())
+  rows.sort()
+
+  cols = ??? #unfinished
+
+  
+  
+  
+
+
 def print_ecdf_annotations(ecdf,data,minx=-2000,weighted=True,delim="\t"):
   """
   Returns string of 'delim'-delimited printout. Assumes that

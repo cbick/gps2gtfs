@@ -135,8 +135,8 @@ EP.copy(EP.print_ecdfs(ecdfs))
 ## Prob. of Transfer Comparisons ##
 
 pot_8 = Stats.p_make_transfer_vs_window(hoa_8,doplot=False)
-pot_12 = Stats.p_make_transfer_vs_window(hoa_12,doplot=False)
 pot_17 = Stats.p_make_transfer_vs_window(hoa_17,doplot=False)
+pot_20 = Stats.p_make_transfer_vs_window(hoa_20,doplot=False)
 pot_1 = Stats.p_make_transfer_vs_window(hoa_1,doplot=False)
 
 figure()
@@ -155,31 +155,22 @@ legend(loc=4)
 ## Expected Wait Time Comparisons ##
 
 
-Stats.expected_wait_vs_arrival_plot(hoa_17, headways=(60*15,60*30),
-                                    min_arrival=-10*60, weighted=True,
-                                    ofile="ew_5pm.png")
+ewait_17 = Stats.expected_wait_vs_arrival_plot(hoa_17, 
+                                               headways=(60*15,60*30),
+                                               min_arrival=-10*60, 
+                                               weighted=True,
+                                               ofile="ew_5pm.png")
 
-Stats.expected_wait_vs_arrival_plot(hoa_1, headways=(60*15,60*30),
-                                    min_arrival=-10*60, weighted=True,
-                                    ofile="ew_1am.png")
+ewait_1 = Stats.expected_wait_vs_arrival_plot(hoa_1, headways=(60*15,60*30),
+                                              min_arrival=-10*60, weighted=True,
+                                              ofile="ew_1am.png")
 
 
 ## E/Q values ##
 
-q = .25
-vals = {}
 
-for (hour,),rows in weekday_hoas:
-    data = rows_to_data(rows)
-    x,p,a_n = Stats.ecdf(data,weighted=True)
-    q_lower,nil,nil = Stats.find_quantile(0.5-q,x,p)
-    q_upper,nil,nil = Stats.find_quantile(0.5+q,x,p)
-    med,nil,nil = Stats.find_quantile(0.5,x,p)
-    avg,avg_moe,nil = Stats.E(data,weighted=True)
-
-    vals[hour] = (q_lower,med,q_upper,avg, a_n,avg_moe)
-
-hours = sort(vals.keys())
+Qs,Es = Stats.QEPlot(weekday_hoa_data,
+                     [0.25,0.5,0.75],
+                     weighted=True)
 
 
-del rows,data

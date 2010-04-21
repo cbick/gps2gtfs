@@ -390,8 +390,8 @@ def ecdf(data,weighted=False,alpha=0.05):
     # give all elements weight of 1
     data = concatenate( (data.reshape(len(data),1),ones((len(data),1))), axis=1 )
 
-  def helper((x,p)):
-    cdf[x] = cdf.get(x,0.0) + p
+  def helper((x,w)):
+    cdf[x] = cdf.get(x,0.0) + w
 
   print "  Uniqueifying..."
   map(helper,data)
@@ -454,6 +454,24 @@ def QEPlot(datasets,qs,weighted=True):
   Given a dictionary mapping label strings to optionally weighted data sets,
   and a list of quantiles [q_1,q_2,...,q_n], plots the average and the given 
   quantiles for each ECDF.
+
+  Returns
+   (Qs,Es)
+
+  where Qs is a dict of the format
+
+    { dataset : [ [q_1,q1_lower,q1_upper], ... ] }
+  where q_1 in this case represents the actual quantile value of the 
+  dataset, _upper and _lower are the upper and lower 95% CI bounds on the
+  quantile, and the keys of the dict are the same as those in the provided
+  datasets parameter.
+
+  Similarly Es is a dict of the format
+
+    { dataset : [ [avg, moe] , ... ] }
+  
+  where avg is the mean of the dataset, and moe is the 95% CI bounds 
+  on the mean.
   """
   
   Qs = {}
@@ -463,18 +481,25 @@ def QEPlot(datasets,qs,weighted=True):
     x,p,a_n = ecdf(data,weighted=weighted)
     Q = []
     for q in qs:
-      Q.append( find_quantile(q,x,p)[0] )
+      quantile = find_quantile(q,x,p)[0]
+      lower_q = find_quantile(q,x,p+a_n)[0]
+      upper_q = find_quantile(q,x,p-a_n)[0]
+      Q.append( (quantile,lower_q,upper_q) )
     Qs[name] = array(Q)
     Es[name] = E(data,weighted=weighted)
 
   figure()
   for name in datasets.keys():
     Q = Qs[name]
-    avg = Es[name]
+    avg,moe = Es[name]
 
-    plot( Q, 'k-x', label=name )
-    plot( avg, 'ko', label=name)
+    plot( [name]*len(Q),Q[:,0], 'k-x', label=name )
+    plot( [name]*len(Q),Q[:,1], 'k_', label=name )
+    plot( [name]*len(Q),Q[:,2], 'k_', label=name )
+    plot( [name],[avg], 'kD', label=name)
+    plot( [name]*2,[avg-moe,avg+moe], 'k_',label=name)
 
+  return Qs,Es
 
 
 def find_pred_interval(x,p,a_n,alpha=0.05):
