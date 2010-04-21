@@ -144,7 +144,11 @@ class ServiceDateHandler(object):
     min_date,max_date = cur.fetchone()[0:2]    
     one_day = timedelta(days=1);
 
-    day = min_date  
+    day = min_date
+    if isinstance(day,basestring):
+      day = ServiceDateHandler.parseDate(day)
+      max_date = ServiceDateHandler.parseDate(max_date)
+
     while day <= max_date:
       service_ids = tuple(self.effective_service_ids(day));
 
