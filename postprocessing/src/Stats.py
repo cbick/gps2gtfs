@@ -468,7 +468,7 @@ def QEPlot(datasets,qs,weighted=True):
 
   Similarly Es is a dict of the format
 
-    { dataset : [ [avg, moe] , ... ] }
+    { dataset : [avg, moe] }
   
   where avg is the mean of the dataset, and moe is the 95% CI bounds 
   on the mean.
