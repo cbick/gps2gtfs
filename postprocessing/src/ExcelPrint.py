@@ -24,8 +24,25 @@ def print_QE_tables(Qs,Es,qs,delim="\t"):
   rows = array(Qs.keys())
   rows.sort()
 
-  cols = ??? #unfinished
+  # we want 3 values for each Q and also the E
+  qs = map(str,repeat(qs,3))
+  qs[1] += " lower CI"
+  qs[2] += " upper CI"
+  cols = qs+["E","E-moe","E+moe"]
 
+  ret += delim + delim.join(cols) + "\n"
+  
+  for row in rows:
+    Q = Qs[row]
+    E,moe = Es[row]
+
+    ret += row + delim
+
+    for qlh in Q:
+      ret += delim.join(map(str,qlh)) + delim
+    
+    ret += str(E) + delim + str(E-moe) + delim + str(E+moe)
+    ret += "\n"
   
   
   
