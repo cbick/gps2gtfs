@@ -168,9 +168,7 @@ ewait_1 = Stats.expected_wait_vs_arrival_plot(hoa_1, headways=(60*15,60*30),
 
 ## E/Q values ##
 
-
-Qs,Es = Stats.QEPlot(weekday_hoa_data,
-                     [0.25,0.5,0.75],
-                     weighted=True)
+qs=[0.25,0.5,0.75]
+Qs,Es = Stats.QEPlot(weekday_hoa_data,qs,weighted=True)
 
 

@@ -493,11 +493,11 @@ def QEPlot(datasets,qs,weighted=True):
     Q = Qs[name]
     avg,moe = Es[name]
 
-    plot( [name]*len(Q),Q[:,0], 'k-x', label=name )
-    plot( [name]*len(Q),Q[:,1], 'k_', label=name )
-    plot( [name]*len(Q),Q[:,2], 'k_', label=name )
-    plot( [name],[avg], 'kD', label=name)
-    plot( [name]*2,[avg-moe,avg+moe], 'k_',label=name)
+    plot( [name]*len(Q),Q[:,0], 'k-x' )
+    plot( [name]*len(Q),Q[:,1], 'k_' )
+    plot( [name]*len(Q),Q[:,2], 'k_' )
+    plot( [name],[avg], 'kD')
+    plot( [name]*2,[avg-moe,avg+moe], 'k_')
 
   return Qs,Es
 

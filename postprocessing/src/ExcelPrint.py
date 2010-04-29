@@ -1,5 +1,5 @@
 from scipy import array,sort
-from pylab import find,hist,figure
+from pylab import find,hist,figure,repeat
 import subprocess
 
 def copy(txt):
@@ -26,8 +26,9 @@ def print_QE_tables(Qs,Es,qs,delim="\t"):
 
   # we want 3 values for each Q and also the E
   qs = map(str,repeat(qs,3))
-  qs[1] += " lower CI"
-  qs[2] += " upper CI"
+  for i in range(len(qs)/3):
+    qs[i*3+0] += " lower CI"
+    qs[i*3+1] += " upper CI"
   cols = qs+["E","E-moe","E+moe"]
 
   ret += delim + delim.join(cols) + "\n"
@@ -36,15 +37,16 @@ def print_QE_tables(Qs,Es,qs,delim="\t"):
     Q = Qs[row]
     E,moe = Es[row]
 
-    ret += row + delim
+    ret += str(row) + delim
 
-    for qlh in Q:
-      ret += delim.join(map(str,qlh)) + delim
+    for qlh in Q: 
+      #excel wants low,high,middle
+      ret += delim.join(map(str,(qlh[1],qlh[2],qlh[0]))) + delim
     
     ret += str(E) + delim + str(E-moe) + delim + str(E+moe)
     ret += "\n"
   
-  
+  return ret
   
 
 
