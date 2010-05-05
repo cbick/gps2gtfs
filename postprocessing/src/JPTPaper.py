@@ -12,7 +12,7 @@ split = DM.split_on_attributes
 array = Stats.array
 
 def rows_to_data(rows):
-    return array([(r['lateness'], r['trip_stop_weight']) for r in rows]);
+  return array([(r['lateness'], r['trip_stop_weight']) for r in rows]);
 
 
 ## Initial retrieval and sorting of data
@@ -91,9 +91,9 @@ pot_overall = Stats.p_make_transfer_vs_window(data,doplot=True)
 ## Expected Wait Time vs Headways plot ##
 
 headway_waits = Stats.expected_wait_vs_arrival_plot(
-    data, headways=(5*60,15*60,30*60,60*60),
-    min_arrival=-10*60, weighted=True,
-    ofile="simplot.png",q_half=None)
+  data, headways=(5*60,15*60,30*60,60*60),
+  min_arrival=-10*60, weighted=True,
+  ofile="simplot.png",q_half=None)
 
 
 del data
@@ -129,7 +129,7 @@ Stats.compare_ecdfs(None,{'8 am':hoa_8,
 #excel printout
 ecdfs = {}
 for whoa,data in weekday_hoa_data.items():
-    ecdfs[whoa] = Stats.ecdf(data,weighted=True);
+  ecdfs[whoa] = Stats.ecdf(data,weighted=True);
 EP.copy(EP.print_ecdfs(ecdfs))
 
 ## Prob. of Transfer Comparisons ##
@@ -170,5 +170,61 @@ ewait_1 = Stats.expected_wait_vs_arrival_plot(hoa_1, headways=(60*15,60*30),
 
 qs=[0.25,0.5,0.75]
 Qs,Es = Stats.QEPlot(weekday_hoa_data,qs,weighted=True)
+EP.copy(EP.print_QE_tables(Qs,Es,qs))
 
+
+
+
+### Route Portion Plots ###
+
+begin_route_rows = []
+mid_route_rows = []
+end_route_rows = []
+for k in portions.keys():
+  if k[0] < 25: begin_route_rows += portions[k]
+  elif k[0] < 75: mid_route_rows += portions[k]
+  else: end_route_rows += portions[k]
+
+portion_data = {}
+portion_data['Start of Route'] = rows_to_data(begin_route_rows)
+portion_data['Middle of Route'] = rows_to_data(mid_route_rows)
+portion_data['End of Route'] = rows_to_data(end_route_rows)
+
+begin_data = portion_data['Start of Route']
+mid_data = portion_data['Middle of Route']
+end_data = portion_data['End of Route']
+
+# ECDF Comparison #
+
+ecdfs = {}
+for k,v in portion_data.items():
+  ecdfs[k] = Stats.ecdf(v,weighted=True)
+
+EP.copy(EP.print_ecdfs(ecdfs))
+
+# E/Q Values #
+
+qs=[0.25,0.5,0.75]
+stopnums = {}
+for (sn,),rows in stop_numbers.items():
+  stopnums[sn] = rows_to_data(rows);
+
+Qs,Es = Stats.QEPlot(stopnums,qs,weighted=True)
+EP.copy(EP.print_QE_tables(Qs,Es,qs))
+
+# Expected Wait #
+del rows
+ewait_begin = Stats.expected_wait_vs_arrival_plot(begin_data, 
+                                                  headways=(60*15,60*30),
+                                                  min_arrival=-10*60, 
+                                                  weighted=True,
+                                                  ofile="ew_beg.png")
+
+ewait_mid = Stats.expected_wait_vs_arrival_plot(mid_data, 
+                                                headways=(60*15,60*30),
+                                                min_arrival=-10*60, 
+                                                weighted=True,
+                                                ofile="ew_mid.png")
+EP.copy(EP.print_expected_wait_vs_arrival(ewait_begin))
+EP.copy(EP.print_expected_wait_vs_arrival(ewait_mid))
 
