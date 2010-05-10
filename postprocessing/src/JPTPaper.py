@@ -228,3 +228,40 @@ ewait_mid = Stats.expected_wait_vs_arrival_plot(mid_data,
 EP.copy(EP.print_expected_wait_vs_arrival(ewait_begin))
 EP.copy(EP.print_expected_wait_vs_arrival(ewait_mid))
 
+
+
+### Day of Week plots ###
+
+weekday_data = rows_to_data(weekday_rows)
+weekend_data = rows_to_data(weekend_rows)
+
+del weekend_rows
+del weekday_rows
+del sids
+del rows
+
+# ECDF Comparison #
+ecdfs = {'Weekdays':Stats.ecdf(weekday_data,weighted=True),
+         'Weekends':Stats.ecdf(weekend_data,weighted=True)}
+EP.copy(EP.print_ecdfs(ecdfs))
+
+# E/Q Values #
+
+# unused because pylab can't handle categories (stupid)
+# but kept here for reference.
+dowmap = { 0:'Sunday',
+           1:'Monday',
+           2:'Tuesday',
+           3:'Wednesday',
+           4:'Thursday',
+           5:'Friday',
+           6:'Saturday' }
+
+qs=[0.25,0.5,0.75]
+for (dow,),d in dows.items():
+  dows[dow] = rows_to_data(d)
+  del dows[(dow,)]
+  del d
+
+Qs,Es = Stats.QEPlot(dows,qs,weighted=True)
+EP.copy(EP.print_QE_tables(Qs,Es,qs))
