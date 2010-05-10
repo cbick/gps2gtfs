@@ -15,9 +15,15 @@ create index seg_sort_idx on tracked_routes(gps_segment_id,reported_update_time)
 
 
 
-ALTER TABLE gps_stop_times ADD CONSTRAINT gpstimes_tid_fkey
+ALTER TABLE gps_segments ADD CONSTRAINT gpssegs_tid_fkey
       FOREIGN KEY (trip_id)
       REFERENCES gtf_trips(trip_id);
+ALTER TABLE gps_segments ADD CONSTRAINT gpssegs_pkey
+      PRIMARY KEY (gps_segment_id);
+
+ALTER TABLE gps_stop_times ADD CONSTRAINT gstimes_gstops_fkey
+      FOREIGN KEY (gps_segment_id)
+      REFERENCES gps_segments(gps_segment_id);
 ALTER TABLE gps_stop_times ADD CONSTRAINT gpstimes_sid_fkey
       FOREIGN KEY (stop_id)
       REFERENCES gtf_stops(stop_id);
@@ -27,10 +33,6 @@ ALTER TABLE gps_stop_times ADD CONSTRAINT gpstimes_ptype_fkey
 ALTER TABLE gps_stop_times ADD CONSTRAINT gpstimes_dtype_fkey
       FOREIGN KEY (drop_off_type)
       REFERENCES gtfs_pickup_dropoff_types(type_id);
-ALTER TABLE gps_stop_times ADD CONSTRAINT gpstimes_arrtime_check
-      CHECK (arrival_time LIKE '__:__:__');
-ALTER TABLE gps_stop_times ADD CONSTRAINT gpstimes_deptime_check
-      CHECK (departure_time LIKE '__:__:__');
 ALTER TABLE gps_stop_times 
       ALTER COLUMN stop_sequence SET NOT NULL;
 
@@ -43,8 +45,9 @@ ALTER TABLE service_combinations ADD CONSTRAINT combo_sid_fkey
       FOREIGN KEY (service_id) REFERENCES gtf_calendar(service_id);
 ALTER TABLE tracked_routes ADD CONSTRAINT trackroute_pkey
       PRIMARY KEY (global_id);
-ALTER TABLE tracked_routes ADD CONSTRAINT trackroute_tid_fkey
-      FOREIGN KEY (trip_id) REFERENCES gtf_trips(trip_id);
+ALTER TABLE tracked_routes ADD CONSTRAINT trackroute_gpssid_fkey
+      FOREIGN KEY (gps_segment_id) 
+      REFERENCES gps_segments(gps_segment_id);
 
 
 create index tripstart_idx on gtf_trip_information(trip_id);

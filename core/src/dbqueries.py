@@ -324,8 +324,8 @@ def get_previous_trip_ID(trip_id, start_date, offset, numtrips=10):
   route_id,dir_id = map(lambda s:routeinfo[s], 
                         "route_id,direction_id".split(","));
   
-  SQLExec(cur,"""select min_depart as mintime
-                   from gtf_trip_start_times where trip_id=%(tid)s""",
+  SQLExec(cur,"""select first_departure as mintime
+                   from gtf_trip_information where trip_id=%(tid)s""",
           {'tid':trip_id});
 
   # start_time is the time the bus started for the date start_date
@@ -338,18 +338,18 @@ def get_previous_trip_ID(trip_id, start_date, offset, numtrips=10):
   today_ids = map(lambda sid: "'"+str(sid)+"'", 
                   get_serviceIDs_for_date(start_date));
   sql = """(select trip_id, 0 as offset,
-                  abs(min_depart-%(start_time)s) as diff 
-             from gtf_trips natural join gtf_trip_start_times
+                  abs(first_departure-%(start_time)s) as diff 
+             from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(today_ids) + """)
-               and min_depart < %(start_time)s
+               and first_departure < %(start_time)s
            union
            select trip_id, 86400 as offset,
-                 abs(min_depart-86400-%(start_time)s) as diff
-             from gtf_trips natural join gtf_trip_start_times
+                 abs(first_departure-86400-%(start_time)s) as diff
+             from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(yesterday_ids) + """)
-               and min_depart-86400 < %(start_time)s
+               and first_departure-86400 < %(start_time)s
            ) order by diff limit """ + str(numtrips)
 
   SQLExec(cur,sql,
@@ -394,6 +394,7 @@ def get_best_matching_trip_ID(route_id, dir_id, start_date, start_time,
   today_ids = map(lambda sid: "'"+str(sid)+"'", 
                     get_serviceIDs_for_date(start_date));
   print "  Today's IDs:",today_ids
+  print "  (today is",start_date,")"
 
   tomorrow_ids = map(lambda sid: "'"+str(sid)+"'",
                      get_serviceIDs_for_date(start_date +
@@ -401,20 +402,20 @@ def get_best_matching_trip_ID(route_id, dir_id, start_date, start_time,
   print "  Tomorrow's IDs:",tomorrow_ids
 
   sql = """(select trip_id, 0 as offset,
-                  abs(min_depart-%(start_time)s) as diff 
-             from gtf_trips natural join gtf_trip_start_times
+                  abs(first_departure-%(start_time)s) as diff 
+             from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(today_ids) + """)
            union
            select trip_id, 86400 as offset,
-                 abs(min_depart-86400-%(start_time)s) as diff
-             from gtf_trips natural join gtf_trip_start_times
+                 abs(first_departure-86400-%(start_time)s) as diff
+             from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(yesterday_ids) + """)
            union
            select trip_id, -86400 as offset,
-                 abs(min_depart+86400-%(start_time)s) as diff
-             from gtf_trips natural join gtf_trip_start_times
+                 abs(first_departure+86400-%(start_time)s) as diff
+             from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(tomorrow_ids) + """)
            ) order by diff limit """ + str(num_results)

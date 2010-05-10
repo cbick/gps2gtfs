@@ -84,7 +84,7 @@ To use it, follow these steps:
 
 <h4>3.2. Insert correct routeid/dirtag matchup data</h4>
 <p>
-       From the nextmuni_import/sql directory, apple the populate_rid_dirtag.sql
+       From the nextmuni_import/sql directory, apply the populate_rid_dirtag.sql
        file.
 </p>
 
@@ -118,7 +118,8 @@ do this you first need to do some preprocessing.
 
 <pre><code>  python Preprocessing.py trips </code></pre>
 <p>
-This separates the tracking data into distinct routes and trips.
+This prepares the schedule data for faster matching with tracking data.
+It can take a while but it saves time in the long run.
 </p>
 
 <h4>4.2. Populate routeid_dirtag table</h4>
@@ -161,6 +162,22 @@ This separates the tracking data into distinct routes and trips.
      of results then you are not in so good shape, and should give serious
      consideration to (a). The data I currently have for SF Muni returns
      121 rows for the second query.
+</p>
+
+<h4>4.3. Implement get_direction_for_dirtag() method in core/src/dbqueries.py</h4>
+<p>
+This has already been implemented correctly for SF Muni data, however it is
+unlikely to be correct for anything else. The dirtag field collected from
+GPS data must indicate not only the route but also the direction in which
+that route is heading; this direction must be matched up with the GTFS concept
+of direction which is either '1' or '0'.
+</p>
+
+<p>
+SFMuni NextBus data, for example, includes either "IB" or "OB" within the text of 
+each dirtag. In the SFMuni GTFS data, inbound buses have a direction_id of '1',
+and outbound buses have that of '0'. Therefore the implementation currently in
+place simply looks for either "OB" or "IB" in the dirtag.
 </p>
 
 <h3>5. Match GPS data to GTFS schedules (hoorah!)</h3>

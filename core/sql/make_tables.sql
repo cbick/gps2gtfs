@@ -1,5 +1,13 @@
 drop table vehicle_track cascade;
 drop table config cascade;
+drop table routeid_dirtag cascade;
+drop table shape_dirtag cascade;
+drop table tracked_routes cascade;
+drop table gps_stop_times cascade;
+drop table gps_segments cascade;
+drop table gtf_trip_information cascade;
+drop table gtf_stoptimes_information cascade;
+
 
 begin;
 
@@ -19,6 +27,11 @@ create table vehicle_track (
 
 CREATE TABLE routeid_dirtag (
     route_id text,
+    dirtag text
+);
+
+CREATE TABLE shape_dirtag (
+    shape_id text,
     dirtag text
 );
 

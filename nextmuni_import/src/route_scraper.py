@@ -1,3 +1,5 @@
+#!/Library/Frameworks/Python.framework/Versions/Current/bin/python
+
 # Copyright (c) 2010 Colin Bick, Robert Damphousse
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy

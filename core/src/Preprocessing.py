@@ -149,7 +149,7 @@ def load_and_cache_route( route_name ):
 def create_all_actual_timetables():
   for seg_id in db.get_segment_IDs(True):
     create_actual_timetable(seg_id)
-  db.commit();
+
 
 def create_actual_timetable( segment_id ):
   """
@@ -248,7 +248,6 @@ def auto_populate_rid_dirtags():
   This just calls a database function.
   """
   db.populate_routeid_dirtag(True);
-  db.commit()
   
 
 
@@ -278,3 +277,4 @@ if __name__=="__main__":
     fix_all_earlybirds()
   elif arg == 'populate_ridtags':
     auto_populate_rid_dirtags()
+  db.commit()
