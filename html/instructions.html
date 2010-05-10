@@ -76,19 +76,13 @@ set up to pull the data directly from the nextmuni xml service.
 
 To use it, follow these steps:
 
-<h4>3.1. Fix erroneous SFMuni GTFS data</h4>
+<h4>3.1. Fix SFMuni GTFS data</h4>
 <p>       
        From the nextmuni_import/sql directory, apply the change_sf_gtfs.sql
        file.
 </p>
 
-<h4>3.2. Insert correct routeid/dirtag matchup data</h4>
-<p>
-       From the nextmuni_import/sql directory, apply the populate_rid_dirtag.sql
-       file.
-</p>
-
-<h4>3.3. Set up a job to collect the data</h4>
+<h4>3.2. Set up a job to collect the data</h4>
 <p>
        Essentially, you want the python script found at
        nextmuni_import/src/route_scraper.py to run every 1 minute
@@ -125,8 +119,7 @@ It can take a while but it saves time in the long run.
 <h4>4.2. Populate routeid_dirtag table</h4>
 <p>For this there are two options:</p>
 <p>
-  <b>a)</b> Populate the routeid_dirtag table manually. (This was already done
-     in step 3 if you imported data from San Francisco Muni). The idea
+  <b>a)</b> Populate the routeid_dirtag table manually. The idea
      is to match NextBus' "dirtag" values up with GTFS route ID's.
      The reason to do this manually is that NextBus and GTFS both are
      riddled with errors that you may or may not have caught yet. 
