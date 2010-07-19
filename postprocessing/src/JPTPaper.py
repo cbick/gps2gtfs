@@ -194,7 +194,7 @@ wmean,err = Stats.E(w_ecdf[w_ecdf<Inf], weighted=False)
 figure()
 plot(w_ecdf[w_ecdf<Inf],p_ecdf[w_ecdf<Inf], label="Arrival ECDF")
 plot( [28800,28800], [0,1], label="8 am" )
-plot( [wmean,wmean], [0,1], label="Average arrival time (%d)" )
+plot( [wmean,wmean], [0,1], label="Average arrival time" )
 axis((27400,31000,0,1))
 
 
