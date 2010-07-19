@@ -172,6 +172,30 @@ qs=[0.25,0.5,0.75]
 Qs,Es = Stats.QEPlot(weekday_hoa_data,qs,weighted=True)
 EP.copy(EP.print_QE_tables(Qs,Es,qs))
 
+## Trip Plan Sim ##
+xfer_arrive_data = weekday_hoa_data[7]
+xfer_depart_data = weekday_hoa_data[7]
+dest_arrive_data = weekday_hoa_data[8]
+
+xfer_arrive_time = 7*3600 + 30*60 # 7:30 am
+xfer_depart_times = array([ 7*3600 + 10*60, 
+                      7*3600 + 30*60, 
+                      7*3600 + 50*60,
+                      8*3600 + 10*60])
+dest_arrive_times = xfer_depart_times + 20*60 #20 minutes later
+
+dest_arrive_results = Stats.trip_plan_evaluation_sim(
+  xfer_arrive_data, xfer_arrive_time,
+  xfer_depart_data, xfer_depart_times,
+  dest_arrive_data, dest_arrive_times);
+
+w_ecdf,p_ecdf,e_ecdf = Stats.ecdf(dest_arrive_results,weighted=False,alpha=0.05)
+wmean,err = Stats.E(w_ecdf[w_ecdf<Inf], weighted=False)
+figure()
+plot(w_ecdf[w_ecdf<Inf],p_ecdf[w_ecdf<Inf], label="Arrival ECDF")
+plot( [28800,28800], [0,1], label="8 am" )
+plot( [wmean,wmean], [0,1], label="Average arrival time (%d)" )
+axis((27400,31000,0,1))
 
 
 

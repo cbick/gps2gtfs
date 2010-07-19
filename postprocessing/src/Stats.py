@@ -145,6 +145,8 @@ def p_make_transfer_vs_window(data1,data2=None,
 
   return array(zip(windows,probs))
 
+  
+
 
 def expected_wait_time_random_arrival(xdata,wdata,headway,
                                       nsims = 5000000, ntrips=3,
@@ -224,6 +226,55 @@ def calc_expected_wait_time_for_random_arrival(data,headways,weighted=True):
 
   return ret
 
+
+
+def trip_plan_evaluation_sim( xfer_arrive_data, xfer_arrive_time,
+                              xfer_depart_data, xfer_depart_times,
+                              dest_arrive_data, dest_arrive_times,
+                              nsims = 100000):
+  """
+  Given the lateness distributions for a transfer and arrival at
+  the final destination, computes an ECDF for the actual arrival
+  time at the final destination. If the ECDF does not accumulate
+  fully to 100%, then add another xfer_depart_time or just accept
+  that some percent of the time you never make it to your destination.
+
+  xfer_depart_times is a SORTED (increasing) list of the scheduled
+  departure times of the 2nd bus of the trip.
+
+  dest_arrive_times should correspond to the scheduled arrival times
+  of each of the scheduled 2nd bus trips.
+  """
+
+  xarrd,xarrw = map(R.FloatVector,xfer_arrive_data.transpose())
+  xdepd,xdepw = map(R.FloatVector,xfer_depart_data.transpose())
+  darrd,darrw = map(R.FloatVector,dest_arrive_data.transpose())
+
+  print "Sampling..."
+  rref1 = R.r['sample'](xarrd, nsims, replace=True, prob=xarrw)
+  rref2 = R.r['sample'](xdepd, nsims*len(xfer_depart_times),
+                        replace=True, prob=xdepw)
+  rref3 = R.r['sample'](darrd, nsims, replace=True, prob=darrw)
+
+  s1,s2,s3 = map(asarray, (rref1,rref2,rref3))
+  s2.resize( nsims, len(xfer_depart_times) )
+
+  print "Done."
+
+  print "Simulating..."
+  xfers = array([False]*nsims)
+  s1 += xfer_arrive_time
+  s2 += xfer_depart_times
+
+  # Find which transfer we made in each sim
+  for i in range(len(xfer_depart_times)):
+    made_this_xfer = (~ xfers) * (s1 < s2[:,i])
+    s3[made_this_xfer] += dest_arrive_times[i]
+    xfers += made_this_xfer
+
+  print "Done."
+  print "%d transfers totally never made" % ( (~ xfers).sum() )
+  return where(xfers,s3,Inf)
 
 def expected_wait_time_simulation(xdata,wdata,arrival_x,headway,
                                   nsims = 500000, ntrips=3,
