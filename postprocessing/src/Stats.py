@@ -32,7 +32,7 @@ pcolors=['b','g','r','c','m','y','k',
          'b-.','g-.','r-.','c-.','m-.','y-.','k-.',
          'b:','g:','r:','c:','m:','y:','k:',
          'b--','g--','r--','c--','m--','y--','k--',]
-
+Inf = float('inf')
 
 #### Standard Statistical Utility Functions ####
 

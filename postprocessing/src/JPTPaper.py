@@ -191,6 +191,26 @@ dest_arrive_results = Stats.trip_plan_evaluation_sim(
 
 w_ecdf,p_ecdf,e_ecdf = Stats.ecdf(dest_arrive_results,weighted=False,alpha=0.05)
 wmean,err = Stats.E(w_ecdf[w_ecdf<Inf], weighted=False)
+tpsecdf = (w_ecdf,p_ecdf,e_ecdf)
+
+EP.copy(EP.print_ecdfs( { 'Final Arrival Time ECDF' : tpsecdf } ))
+print "Mean:"
+print wmean,"\t", 0
+print wmean,"\t", Stats.evaluate_ecdf( wmean, w_ecdf, p_ecdf)[1]
+print 0, "\t",    Stats.evaluate_ecdf( wmean, w_ecdf, p_ecdf)[1]
+
+print "8 am:"
+print 8*3600,"\t",0
+print 8*3600,"\t", Stats.evaluate_ecdf(8*3600, w_ecdf, p_ecdf)[1]
+print 0,"\t", Stats.evaluate_ecdf(8*3600, w_ecdf, p_ecdf)[1]
+
+print "20 minutes late:"
+print 8*3600+20*60,"\t",0
+print 8*3600+20*60,"\t",Stats.evaluate_ecdf(8*3600+20*60, w_ecdf, p_ecdf)[1]
+print 0,"\t",Stats.evaluate_ecdf(8*3600+20*60, w_ecdf, p_ecdf)[1]
+
+
+
 figure()
 plot(w_ecdf[w_ecdf<Inf],p_ecdf[w_ecdf<Inf], label="Arrival ECDF")
 plot( [28800,28800], [0,1], label="8 am" )
