@@ -90,7 +90,7 @@ class ServiceDateHandler(object):
     dayOfWeek = day.weekday() #0-6 for Mon-Sun
     for row in self.calendar_rows:     
       # recall we selected mon,tues,... first in the query
-      if int(row[dayOfWeek]): 
+      if int(row[dayOfWeek]):
         #this service runs on this day of the week
         if row['start_date'] <= day and row['end_date'] >= day: 
           #this service applies to this date

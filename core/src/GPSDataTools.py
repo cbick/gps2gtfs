@@ -57,7 +57,13 @@ class VehicleReport(object):
     self.route_tag = routetag
     self.dirtag = dirtag
     self.reported_update_time = reported_update_time
-    
+
+  def __str__(self):
+    return """\
+vehicle %s on route %s, dirtag %s:  %3.4f, %3.4f, time %s
+""" % (self.vehicle_id, self.route_tag, self.dirtag,
+       self.lat,self.lon,self.reported_update_time)
+
   def timeInSecondsIntoDay(self):
     t = self.reported_update_time
     h,m,s = t.hour,t.minute,t.second
