@@ -195,6 +195,9 @@ def get_route_for_dirtag(dirtag):
     print "MORE THAN ONE ROUTE PER DIRTAG"
     print "  dirtag:",dirtag
     print "  routes:",ret
+  if len(ret) == 0:
+    print "No routes mapped for dirtag",dirtag
+    return None
   return ret[0]
 
 def get_direction_for_dirtag(dirtag):

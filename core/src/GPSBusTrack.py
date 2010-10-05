@@ -108,28 +108,50 @@ class GPSBusSchedule(object):
   This class also serves as a central source for GTFSBusSchedule, 
   GPSBusTrack, and GTFSBusTrack objects.
   """
-  def __init__(self,segment_id,trip_id=None,offset=None):
+  def __init__(self,segment_id,gpstrack=None,trip_id=None,offset=None):
     """
     Creates a schedule matchup based on the specified tracked segment.
-    If trip_id is specified, uses the GTFS schedule for that trip ID,
-    otherwise uses the trip ID specified in the database.
-    If offset is specified, then that offset is applied against GTFS
-    data, otherwise the offset specified in the database is used.
+    This matchup can either be constructed using tracked segment
+    data in the database, or by providing a GPSBusTrack directly through
+    the gpstrack parameter.
+
+    To use matched data in the database, specify the segment_id as
+    previously exported by GPSBusTrack. In this case:
+      - gpstrack is ignored.
+      - If trip_id is specified, uses the GTFS schedule for that trip ID,
+        otherwise uses the trip ID specified in the database.
+      - If offset is specified, then that offset is applied against GTFS
+        data, otherwise the offset specified in the database is used.
+
+    To use an existing GPSBusTrack object, provide the object through the
+    gpstrack parameter. 
+      - segment_id must be None. 
+      - trip_id must be provided.
+      - offset must be provided (if None, then treated as zero).
     """
-    self.segment = gpstool.TrackedVehicleSegment(segment_id,
-                                                 useCorrectedGTFS=False);
 
-    if offset is not None: 
-      self.segment.offset = offset
-
-    if trip_id is not None:
-      self.segment.trip_id = trip_id;
-      self.segment.schedule = GTFSBusSchedule(trip_id,self.segment.offset);
+    if segment_id is not None:
+      self.segment = gpstool.TrackedVehicleSegment(segment_id,
+                                                   useCorrectedGTFS=False);
+      if offset is not None: 
+        self.segment.offset = offset
+        
+      if trip_id is not None:
+        self.segment.trip_id = trip_id;
+        self.segment.schedule = GTFSBusSchedule(trip_id,self.segment.offset);
       
-    self.schedule = self.segment.schedule;
-    self.bustrack = GPSBusTrack(self.segment);
+      self.schedule = self.segment.schedule;
+      self.bustrack = GPSBusTrack(self.segment);
 
-    self.corrected_schedule = None; #don't make it 'til someone wants it
+    else:
+      if gpstrack is None or trip_id is None:
+        raise Exception, "Must provide either segment_id or gpstrack"
+      if offset is None:
+        offset = 0
+      self.schedule = GTFSBusSchedule(trip_id,offset)
+      self.bustrack = gpstrack
+      
+    self.corrected_schedule = None; #don't make it unless someone wants it
     self.__matchSchedule();
 
 
@@ -284,6 +306,8 @@ class GPSBusTrack(BusTrack):
     if start_time is None:
       return None
     route_id,dir_id = self.segment.getGTFSRouteInfo();
+    if not route_id or not dir_id:
+      return None
     
     matches = db.get_best_matching_trip_ID(route_id,dir_id,start_date,
                                            start_time,num_results=search_size);

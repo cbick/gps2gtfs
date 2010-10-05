@@ -60,9 +60,15 @@ class VehicleReport(object):
 
   def __str__(self):
     return """\
-vehicle %s on route %s, dirtag %s:  %3.4f, %3.4f, time %s
+vehicle %s on route %s, dirtag %s:  %s, %s, time %s
 """ % (self.vehicle_id, self.route_tag, self.dirtag,
        self.lat,self.lon,self.reported_update_time)
+
+  def __eq__(self,other):
+    return (self.vehicle_id, self.lat, self.lon, self.route_tag,
+            self.dirtag, self.reported_update_time) \
+            == (other.vehicle_id, other.lat, other.lon, other.route_tag,
+                other.dirtag, other.reported_update_time)
 
   def timeInSecondsIntoDay(self):
     t = self.reported_update_time
