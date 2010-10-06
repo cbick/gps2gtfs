@@ -49,7 +49,7 @@ class GPSTrackState(object):
 
     if vreport.route_tag != self.last_routetag \
           or vreport.dirtag != self.last_dirtag:
-
+      ## We ought to optionally dump this into the database.
       veh_seg = GPSDataTools.VehicleSegment(self.track)
       bustrack = GPSBusTrack.GPSBusTrack(veh_seg);
       gtfsinfo = bustrack.getMatchingGTFSTripID();

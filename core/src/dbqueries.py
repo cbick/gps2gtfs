@@ -747,4 +747,32 @@ where vt.dirtag != 'null' and vt.dirtag is not null)
   cur.close()
 
 
+def export_lateness_data( gpssched, rms_error ):
+  """
+  Given a GPSBusSchedule gpssched, adds entries into the datamining_table
+  which records observations of lateness along with their attributes.
+  """
+  
+  sql = """
+insert into datamining_table dt
+( gps_segment_id, gtfs_trip_id, rms_schedule_error, vehicle_id,
+  route_name, vehicle_type, service_id, direction_id,
+  stop_lat, stop_lon, stop_id, stop_sequence,
+  scheduled_arrival_time, scheduled_departure_time,
+  actual_arrival_time, lateness, prev_stop_id )
+values
+( null, %(trip_id)s, %(sched_err)s, %(vehid)s,
+  %(routename)s, %(vehtype)s, %(service_id)s, %(dir_id)s,
+  %(stoplat)s,%(stoplon)s,%(stopid)s,%(stopseq)s,
+  %(sched_arr)s,%(sched_dep)s,%(actual_arr)s,%(lateness)s,
+  %(prev_stop_id)s )
+"""
+  
 
+  cur = get_cursor()
+  
+  
+
+
+  cur.close()
+  
