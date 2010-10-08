@@ -29,9 +29,7 @@ class RDConnHandler(asyncore.dispatcher):
   def handle_read(self):
     data = self.recv(5096)
     if len(data) == 0:
-      print "XML data was:"
-      print
-      print self.xml
+      print "XML data received"
       self.parent.data_received(self.xml)
       self.close()
     else:
@@ -50,7 +48,7 @@ class RealtimeDaemon(asyncore.dispatcher):
     self.bind(('',port))
     self.listen(5)
 
-    self.rtsim = RealtimeSim.RealtimeSimulation(None);
+    self.rtsim = RealtimeSim.RealtimeSimulation();
 
 
   def handle_accept(self):
@@ -64,11 +62,12 @@ class RealtimeDaemon(asyncore.dispatcher):
   def data_received(self,data):
     result = self.rtsim.updateVehicles(xml=data)
     if result:
-      ((trip_id, offset, error), bustrack) = result
-      gpssched = GPSBusTrack.GPSBusSchedule( segment_id = None,
-                                             gpstrack = bustrack,
+      print result
+      ((trip_id, offset, error), segment_id) = result
+      gpssched = GPSBusTrack.GPSBusSchedule( segment_id = segment_id,
                                              trip_id = trip_id,
                                              offset = offset );
+      db.export_lateness_data( gpssched, error )
       print "GTFS Matchup Discovered"
       print "Trip:",trip_id
       for actual_arrival in gpssched.getGPSSchedule():
@@ -84,4 +83,4 @@ if __name__ == "__main__":
   import time
   rd = RealtimeDaemon(5050 + (int(time.time())%60) );
   asyncore.loop()
-  
+

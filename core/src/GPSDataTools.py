@@ -83,6 +83,7 @@ class VehicleSegment(object):
   def __init__(self,reports):
     self.reports = reports
     self.dirtag = reports[-1].dirtag
+    self.routetag = reports[-1].route_tag
     self.lations = [[r.lat,r.lon] for r in reports]
     self.shape = None
     self.valid = True
@@ -91,13 +92,22 @@ class VehicleSegment(object):
     """
     Returns (routeID,directionID) for this trip.
     """
-    route_id = db.get_route_for_dirtag(self.dirtag);
+    route_id = db.get_route_for_dirtag(self.dirtag, routetag = self.routetag);
     dir_id = db.get_direction_for_dirtag(self.dirtag);
+    print "Dirtag",self.dirtag,"routetag",self.routetag,"matched to",
+    print route_id,dir_id
     return (route_id,dir_id);
 
   def export_segment(self):
     """
     Exports this segment to the database.
+    Returns ( segment_id, (trip_id,offset,error) ),
+      where segment_id is the tracked_vehicle_segment ID as exported
+      into the database,
+      and (trip_id,offset,error) are the gtfs matchup info as returned
+      by GPSBusTrack.getMatchingGTFSTripID(). 
+
+    If no match is found, returns None.
     """
     from GPSBusTrack import GPSBusTrack
     segID = db.getMaxSegID()+1;
@@ -112,6 +122,7 @@ class VehicleSegment(object):
     rows=[(r.lat,r.lon,r.reported_update_time) for r in self.reports]
     veh_id = self.reports[0].vehicle_id;
     db.export_gps_route(trip_id, trip_date, segID, veh_id, error, offset, rows);
+    return segID, tinfo
 
 
 class TrackedVehicleSegment(object):

@@ -39,35 +39,44 @@ class GPSTrackState(object):
 
   def updateTrack(self, vreport):
     """
-    Updates history with GPSDataTools.VehicleReport vreport.
-    If the vehicle changes routes, the last set of 
+    Updates history with GPSDataTools.VehicleReport vreport. If the 
+    vehicle changes routes, the last set of reports for the previous 
+    route are collected into a GPSBusTrack.GPSBusTrack, and a
+    GTFS match is attempted.
+
+    If no GTFS match is discovered, or the vehicle didn't change
+    routes, returns None.
+
+    Otherwise, returns ( (trip_id,offset,error), segment_id )
+      where (trip_id, offset, error) are the gtfs matchup info
+      as returned by GPSBusTrack.getMatchingGTFSTripID(),
+      and segment_id is the 
     """
     if self.track and vreport == self.track[-1]:
       return None
     
     ret = None
 
-    if vreport.route_tag != self.last_routetag \
-          or vreport.dirtag != self.last_dirtag:
-      ## We ought to optionally dump this into the database.
+    if self.track and (vreport.route_tag != self.last_routetag \
+                         or vreport.dirtag != self.last_dirtag):
       veh_seg = GPSDataTools.VehicleSegment(self.track)
-      bustrack = GPSBusTrack.GPSBusTrack(veh_seg);
-      gtfsinfo = bustrack.getMatchingGTFSTripID();
+      segment_id, gtfsinfo = veh_seg.export_segment()
 
-      if not gtfsinfo and len(self.track) > 1:
+      if gtfsinfo is None and len(self.track) > 1:
         print "Segment ended but no GTFS trip found (%d interp pts)" \
             % ( len(self.track), )
         print " Old route tag: %s, Old dir tag: %s" \
             % (self.last_routetag, self.last_dirtag)
         print " GPS Track:"
         print "  " + "\n  ".join(map(str,self.track))
+      
+      elif gtfsinfo is not None:
+        ret = gtfsinfo, segment_id
 
       self.last_routetag = vreport.route_tag
       self.last_dirtag = vreport.dirtag
       self.track = []
 
-      if gtfsinfo: 
-        ret = gtfsinfo, bustrack
     
     self.track.append(vreport)
     return ret
@@ -82,14 +91,8 @@ class RealtimeSimulation(object):
   
   """
   
-  def __init__(self, announce_callback = lambda trip, track: None):
-    """
-    If announce_callback is None, then udpateVehicles() returns
-    (trip,track) rather than using a callback.
-    """
-    
+  def __init__(self):
     self.vehicles = {}
-    self.announce = announce_callback
 
   def updateVehicles(self, xml = None):
     if xml is None:
@@ -118,16 +121,4 @@ class RealtimeSimulation(object):
         self.vehicles[vid] = trk
 
       gtfs_match = trk.updateTrack(report)
-      if gtfs_match is not None:
-        if self.announce:
-          self.announce( trip = gtfs_match[0], track = gtfs_match[1] )
-        else:
-          return gtfs_match
-
-
-  def run(self):
-    while True:
-      self.updateVehicles()
-      time.sleep(30)
-
-
+      return gtfs_match

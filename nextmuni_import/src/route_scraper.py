@@ -43,8 +43,13 @@ def read_routes(fname):
 
 def parse_xml(routes,xmldata):
   # parse xml for the route
-  retrieve_time = dt.datetime.now();
   doc = xml.parseString(xmldata);
+
+  retrieve_time = dt.datetime.fromtimestamp( 
+    int(doc.getElementsByTagName('retrieveTime')[0].getAttribute("time"))
+    )
+  print "Retrieve time:",retrieve_time.ctime()
+
   attributes = [ 'id', 'routeTag', 'dirTag', 'lat', 'lon', 'secsSinceReport', 
                  'predictable', 'heading' ];
   updated_data = [];
