@@ -170,10 +170,10 @@ class GPSBusSchedule(object):
         starttime = lasttime);
 
       if arrival_time is None:
-      #  print "NO ARRIVAL FOUND FOR STOP AT %d" %(time,)
+        print "NO ARRIVAL FOUND FOR STOP AT %d" %(lasttime,)
         pass
       else:
-      #  print "arrival for stop at %d" %(time,)
+        print "arrival for stop at %d" %(lasttime,)
         if str(arrival_time) == 'nan':
           raise Exception, "asdf"
         lasttime = arrival_time;
@@ -283,7 +283,7 @@ class GPSBusTrack(BusTrack):
     if start_time is None:
       return None
     route_id,dir_id = self.segment.getGTFSRouteInfo();
-    if not route_id or not dir_id:
+    if route_id is None or dir_id is None:
       return None
     
     matches = db.get_best_matching_trip_ID(route_id,dir_id,start_date,

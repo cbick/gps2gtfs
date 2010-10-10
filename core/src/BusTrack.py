@@ -157,6 +157,7 @@ class BusTrack(object):
     ll1 = startloc
     ll2 = self.interpolation[self.cached_index+1][:2]
     min_dist,frac = interp_helper(ll1,ll2,stoploc);
+    print "XXX",ll1,ll2,self.cached_index
     min_time = timefrac_helper(starttime,
                                self.interpolation[self.cached_index+1][2],
                                frac);
@@ -186,11 +187,11 @@ class BusTrack(object):
         continue
 
       within_tol = True;
-        
+      
 
     if not within_tol:
       # We never entered a tolerance zone
-      #print "XXX No arrival, min dist was:",min_dist
+      print "XXX No arrival, min dist was:",min_dist
       return None  
     
     #print "OOO Arrival with distance:",min_dist

@@ -783,9 +783,9 @@ values
 
   basedict = { 'trip_id' : gtfs.trip_id,
                'sched_err' : sched_error,
-               'vehid' : asdf, ##?
+               'vehid' : gpssched.segment.vehicle_id,
                'routename' : gtfs.route_short_name,
-               'vehtype' : fdsa,## ?
+               'vehtype' : gtfs.route_type,
                'service_id' : gtfs.service_id,
                'dir_id' : gtfs.direction_id
                }
@@ -793,6 +793,7 @@ values
   cur = get_cursor()
   
   for arrival in gpssched.getGPSSchedule():
+    print dict(arrival)
     stopdict = dict(basedict)
     stopdict.update ( { 'stoplat' : arrival['stop_lat'],
                         'stoplon' : arrival['stop_lon'],

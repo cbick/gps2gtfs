@@ -3,6 +3,8 @@ import asyncore
 from os import sys
 
 import RealtimeSim
+import dbqueries as db
+import GPSBusTrack
 
 class RDConnHandler(asyncore.dispatcher):
   """
@@ -76,6 +78,8 @@ class RealtimeDaemon(asyncore.dispatcher):
                actual_arrival['actual_arrival_time_seconds'],
                actual_arrival['actual_arrival_time_seconds']
                - actual_arrival['departure_time_seconds'])
+    # in all cases
+    db.commit()
 
 
 
