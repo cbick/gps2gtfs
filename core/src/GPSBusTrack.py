@@ -141,6 +141,9 @@ class GPSBusSchedule(object):
   def getGPSBusTrack(self):
     return self.bustrack;
 
+  def getTrackedVehicleSegment(self):
+    return self.segment;
+
   def getGTFSBusTrack(self, use_shape = False):
     if self.corrected_schedule is None:
       self.corrected_schedule = GTFSBusTrack(self.segment.trip_id,
@@ -160,7 +163,7 @@ class GPSBusSchedule(object):
     lasttime = self.segment.min_time
     prev_arrival_time = None
     prev_stop_id = None
-
+    
     for stop,interp in zip(self.schedule.stops,self.schedule.interpolation):
       lat,lon = interp[:2]
 
@@ -170,10 +173,10 @@ class GPSBusSchedule(object):
         starttime = lasttime);
 
       if arrival_time is None:
-        print "NO ARRIVAL FOUND FOR STOP AT %d" %(lasttime,)
+        #print "NO ARRIVAL FOUND FOR STOP AT %d" %(lasttime,)
         pass
       else:
-        print "arrival for stop at %d" %(lasttime,)
+        #print "arrival for stop at %d" %(lasttime,)
         if str(arrival_time) == 'nan':
           raise Exception, "asdf"
         lasttime = arrival_time;
@@ -401,7 +404,7 @@ class GPSBusTrack(BusTrack):
     then the distance returned from this route with a GTFS trip 
     with no overlap in time will be 0!
     """
-    schedule = GTFSBusSchedule(trip_id);
+    schedule = GTFSBusSchedule(trip_id,offset=offset_seconds);
     #'bounding boxes' of our time interval and of the GTFS trip's time interval
     bbox = self.getRouteTimeInterval(); 
     sched_bbox = schedule.getRouteTimeInterval();
@@ -463,7 +466,7 @@ class GPSBusTrack(BusTrack):
 
     ## Now check along the GTFS route
     for i,pt in enumerate(schedule.interpolation):
-      stoptime = pt[2] - offset_seconds
+      stoptime = pt[2] #- offset_seconds
       myloc = self.getLocationAtTime(stoptime);
       if myloc is None: # then GTFS is out of bounds of GPS time window
         oob_count += 1
@@ -477,7 +480,7 @@ class GPSBusTrack(BusTrack):
 
     ret = math.sqrt( ret/(len(schedule.interpolation)+vstops) )
     print "  Matching id",trip_id,"start time:",
-    print schedule.interpolation[0][2]-offset_seconds,
+    print schedule.interpolation[0][2], #-offset_seconds,
     print "  distance: %9.2f OOB count: %2d/%2d"%(ret,oob_count,
                                                   len(schedule.interpolation))
     return ret,float(oob_count)/len(schedule.interpolation)

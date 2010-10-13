@@ -70,6 +70,12 @@ vehicle %s on route %s, dirtag %s:  %s, %s, time %s
             == (other.vehicle_id, other.lat, other.lon, other.route_tag,
                 other.dirtag, other.reported_update_time)
 
+  def dayOfWeek(self):
+    """
+    0123456 = MTWThFSSu
+    """
+    return self.reported_update_time.weekday()
+
   def timeInSecondsIntoDay(self):
     t = self.reported_update_time
     h,m,s = t.hour,t.minute,t.second

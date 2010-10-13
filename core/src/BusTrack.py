@@ -157,7 +157,6 @@ class BusTrack(object):
     ll1 = startloc
     ll2 = self.interpolation[self.cached_index+1][:2]
     min_dist,frac = interp_helper(ll1,ll2,stoploc);
-    print "XXX",ll1,ll2,self.cached_index
     min_time = timefrac_helper(starttime,
                                self.interpolation[self.cached_index+1][2],
                                frac);

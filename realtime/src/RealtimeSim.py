@@ -73,11 +73,11 @@ class GPSTrackState(object):
       elif gtfsinfo is not None:
         ret = gtfsinfo, segment_id
 
-      self.last_routetag = vreport.route_tag
-      self.last_dirtag = vreport.dirtag
+      
       self.track = []
-
-    
+      
+    self.last_routetag = vreport.route_tag
+    self.last_dirtag = vreport.dirtag    
     self.track.append(vreport)
     return ret
 

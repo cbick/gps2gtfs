@@ -41,7 +41,7 @@ def make_dirtag(sched):
     ret += "IB"
   return ret
 
-def make_xml(sched,date):
+def make_xml(sched,date,maxerr_seconds):
   stops = sched.stops
   vehicle_id = "randomvid_%d" % (int(random() * 10000))
   # add fake stop at the end to trigger route match
@@ -53,10 +53,11 @@ def make_xml(sched,date):
     doc = xml.getDOMImplementation().createDocument(None,"body",None)
     top = doc.documentElement
     velt = doc.createElement("vehicle")
+    timevar = str(int( (random() - 0.5) * 2 * maxerr_seconds ))
     attrs = { 'id' : vehicle_id,
               'routeTag' : sched.route_short_name,
               'dirTag' : make_dirtag(sched),
-              'secsSinceReport' : "0",
+              'secsSinceReport' : timevar,
               'predictable' : 'true',
               'heading' : "0",
               'speedKmHr' : "25"
@@ -87,15 +88,24 @@ def make_xml(sched,date):
   
 
 
-def run():
+def main():
+  import sys
+  if len(sys.argv) > 2:
+    errsecs = int(sys.argv[1])
+  else:
+    errsecs=0
   date = choose_random_date()
   print "Chose random date",date
-  trip_id = choose_random_trip(date)
+
+  if len(sys.argv) == 3:
+    trip_id = sys.argv[2]
+  else:
+    trip_id = choose_random_trip(date)
   print "Chose random trip",trip_id
   sched = gtfs.GTFSBusSchedule(trip_id)
   
-  xml = make_xml(sched,date)
+  xml = make_xml(sched,date,errsecs)
   
 if __name__ == "__main__":
-  run()
+  main()
 
