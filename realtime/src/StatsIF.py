@@ -2,12 +2,40 @@ import rtqueries as rtdb
 
 
 
-def get_percentile( min_lateness_minutes, max_lateness_minutes,
+def get_stops( min_lat, max_lat, min_lon, max_lon ):
+  stops = rtdb.get_stops( min_lat,max_lat,min_lon,max_lon )
+  return map( lambda stop: { 'stop_id' : stop['stop_id'],
+                             'lat' : stop['stop_lat'],
+                             'lon' : stop['stop_lon'],
+                             'stop_name' : stop['stop_name'] },
+              stops)
+
+def get_stop_info(stop_id, dayofweek):
+  sinfos = rtdb.get_stop_info(stop_id,dayofweek)
+  # eventually we'll construct a list of routeinfos
+  rinfos = {}
+  for sinfo in sinfos:
+    route_name = sinfo['route_short_name']
+    rinfo = rinfos.get( route_name, { 'route_name' : route_name,
+                                      'arrivals' : [] } )
+    rinfos[route_name] = rinfo
+    arrival = {}
+    for uk,dbk in ( ('trip_id','trip_id'),
+                    ('arrival_time','arrival_time_seconds'),
+                    ('arrival_time_repr','arrival_time'),
+                    ('stop_seq','stop_sequence') ):
+      arrival[uk] = sinfo[dbk]
+    rinfo['arrivals'].append(arrival)                    
+  return list(rinfos.values())
+
+
+def get_percentile( lateness_bounds,
                     gtfs_trip_id, stop_sequence, stop_id, day_of_week ):
   """
-  Given lower and upper bounds on lateness in minutes, and the identifying
-  information for a single stop of a single trip on a single day of the
-  week, returns a percentile 0 <= p <= 1, defining the probability mass
+  Given bounds [(min1,max1),(min2,max2),...], a sequence of lower and upper 
+  bounds on lateness in minutes, and the identifying information for a 
+  single stop of a single trip on a single day of the week, returns a 
+  list of percentiles  [p1,p2,...], 0 <= p <= 1, defining the probability mass
   that the specified arrival will be between min and max lateness minutes
   late.
 
@@ -15,8 +43,7 @@ def get_percentile( min_lateness_minutes, max_lateness_minutes,
   arrival.
   """
   return rtdb.measure_prob_mass( gtfs_trip_id, stop_id, day_of_week, 
-                                 stop_sequence, 
-                                 min_lateness_minutes, max_lateness_minutes )
+                                 stop_sequence, lateness_bounds )
 
 
 

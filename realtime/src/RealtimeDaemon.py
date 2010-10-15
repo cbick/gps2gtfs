@@ -3,6 +3,7 @@ import asyncore
 from os import sys
 
 import RealtimeSim
+from RealtimeConfig import config
 import dbqueries as db
 import rtqueries as rtdb
 import GPSBusTrack
@@ -66,19 +67,15 @@ class RealtimeDaemon(asyncore.dispatcher):
     result = self.rtsim.updateVehicles(xml=data)
     if result:
       print result
-      ((trip_id, offset, error), segment_id) = result
-      gpssched = GPSBusTrack.GPSBusSchedule( segment_id = segment_id,
+      ((trip_id, offset, error), segment) = result
+      gpssched = GPSBusTrack.GPSBusSchedule( segment = segment,
                                              trip_id = trip_id,
                                              offset = offset );
-      ## We need a way to configure how much data (i.e. how many
-      ## intermediate steps) is saved to the database.
-      ## In one case we want vehicle tracks and full lateness
-      ## data to be recorded. In the other case we only want
-      ## updates to be made to the simplified lateness record.
-      ## This configuration needs to propagate into rtsim.updateVehicles()
-      ## method as well.
-      #db.export_lateness_data( gpssched, error )
+
+      if config['store_intermediate'] is True:
+        db.export_lateness_data( gpssched, error )
       rtdb.record_observations( gpssched )
+
       print "GTFS Matchup Discovered"
       print "Trip:",trip_id
       for actual_arrival in gpssched.getGPSSchedule():

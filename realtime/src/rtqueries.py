@@ -1,23 +1,6 @@
 from dbutils import SQLExec,get_cursor,commit
 
 
-def record_observations( gpssched ):
-  """
-  Given a GPSBusSchedule, records simplified lateness observations
-  """
-  trip_id = gpssched.getGTFSSchedule().trip_id
-  dow = gpssched.getTrackedVehicleSegment().reports[0].dayOfWeek()
-
-  for arrival in gpssched.getGPSSchedule():
-    stop_id = arrival['stop_id']
-    stop_sequence = arrival['stop_sequence']
-    if arrival['actual_arrival_time_seconds'] is not None:
-      lateness_seconds = (arrival['actual_arrival_time_seconds']
-                          - arrival['departure_time_seconds'])
-    else:
-      lateness_seconds = None
-    lateness_observed( trip_id, stop_id, dow, stop_sequence, lateness_seconds )
-    
 
 
 def create_observation_id( trip_id, stop_id, day_of_week, stop_sequence ):
@@ -93,6 +76,26 @@ values
   cur.close()
 
 
+def record_observations( gpssched ):
+  """
+  Given a GPSBusSchedule, records simplified lateness observations
+  """
+  trip_id = gpssched.getGTFSSchedule().trip_id
+  dow = gpssched.getTrackedVehicleSegment().reports[0].dayOfWeek()
+
+  for arrival in gpssched.getGPSSchedule():
+    stop_id = arrival['stop_id']
+    stop_sequence = arrival['stop_sequence']
+
+    if arrival['actual_arrival_time_seconds'] is None:
+      continue # don't store null lateness entries
+
+    lateness_seconds = (arrival['actual_arrival_time_seconds']
+                        - arrival['departure_time_seconds'])
+
+    lateness_observed( trip_id, stop_id, dow, stop_sequence, lateness_seconds )
+    
+
 def lateness_observed( trip_id, stop_id, day_of_week, stop_sequence, 
                        lateness_seconds, auto_create=True ):
   """
@@ -131,21 +134,9 @@ where minutes_late=%(lateness)s
 
 
 def measure_prob_mass( trip_id, stop_id, day_of_week, stop_sequence, 
-                       min_lateness_minutes, max_lateness_minutes ):
-  sql1 = """\
-select sum(num_observations) as num_chosen_observations 
-from simplified_lateness_observations slo
-  inner join observation_attributes oa
-    on slo.observed_stop_id = oa.observed_stop_id
-      and oa.trip_id=%(tid)s
-      and oa.stop_sequence=%(seq)s
-      and oa.day_of_week=%(dow)s
-where minutes_late >= %(minlate)s
-  and minutes_late <= %(maxlate)s
-"""
-
-  sql2 = """\
-select sum(num_observations) as total_num_observations 
+                       lateness_bounds ):
+  sql = """\
+select num_observations, minutes_late
 from simplified_lateness_observations slo
   inner join observation_attributes oa
     on slo.observed_stop_id = oa.observed_stop_id
@@ -155,29 +146,77 @@ from simplified_lateness_observations slo
 """
 
   cur = get_cursor()
-  SQLExec(cur, sql1, {'tid':trip_id,'seq':stop_sequence,'dow':day_of_week,
-                      'minlate':min_lateness_minutes,
-                      'maxlate':max_lateness_minutes})
-  rows = [r[0] for r in cur]
-  if len(rows) == 0 or rows[0] is None:
-    observed_count = 0
-  elif len(rows) > 1:
-    raise Exception, "More than one result"
-  else:
-    observed_count = int(rows[0])
+  SQLExec(cur, sql, {'tid':trip_id,'seq':stop_sequence,'dow':day_of_week})
 
-  SQLExec(cur, sql2, {'tid':trip_id,'seq':stop_sequence,'dow':day_of_week})
-  rows = [r[0] for r in cur]
-
-  if len(rows) == 0 or rows[0] is None:
-    return None
-  elif len(rows) > 1:
-    raise Exception, "More than one result"
-
-  total_count = int(rows[0])
+  rows = map( lambda r: (r['num_observations'],r['minutes_late']),
+              cur.fetchall() );
   
   cur.close()
+
+  reducer = lambda l,r: l+r[0]
+  total = reduce( reducer, rows, 0 )
+  sums = [0] * len(lateness_bounds)
+
+  for i,(min,max) in enumerate(lateness_bounds):
+    sums[i] = reduce(reducer,
+                     filter( lambda r: min<=r[1]<=max, rows ),
+                     0)
   
-  if total_count == 0:
+  if total == 0:
     return None
-  return float(observed_count)/total_count
+
+  return map(lambda i: float(sums[i])/total, 
+             range(len(lateness_bounds)))
+
+
+
+
+def get_stops( min_lat, max_lat, min_lon, max_lon ):
+  sql = """\
+select * from gtf_stops 
+where stop_lat >= min_lat 
+  and stop_lat <= max_lat
+  and stop_lon >= min_lon
+  and stop_lon <= max_lon
+"""
+  cur = get_cursor()
+  SQLExec(cur,sql)
+  rows = cur.fetchall()
+  cur.close()
+  return map(dict,rows)
+
+
+def get_stop_info( stop_id, day_of_week ):
+
+  ## SF hack here, for now.
+  ## Need to define a way of handling the "day of week"
+  ## problem in terms of service IDs.
+  if 0 <= day_of_week <= 4:
+    service_id = 1
+  elif day_of_week == 5:
+    service_id = 2
+  elif day_of_week == 6:
+    service_id = 3
+  else:
+    raise Exception, "Not a day of week"
+
+  sql = """\
+select * 
+from gtf_stop_times gst
+  inner join gtf_trips gt
+  inner join gtf_routes gr
+    on gst.trip_id = gt.trip_id
+      and gt.route_id = gr.route_id
+where gst.stop_id=%(stopid)s
+  and gt.service_id=%(sid)s
+order by gr.route_short_name, gst.arrival_time_seconds
+"""
+
+  cur = get_cursor()
+  SQLExec(cur,sql,{'stopid':stop_id,'sid':service_id})
+  rows = cur.fetchall()
+  cur.close()
+
+  return map(dict,rows)
+
+

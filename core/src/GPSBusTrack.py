@@ -108,16 +108,23 @@ class GPSBusSchedule(object):
   This class also serves as a central source for GTFSBusSchedule, 
   GPSBusTrack, and GTFSBusTrack objects.
   """
-  def __init__(self,segment_id,trip_id=None,offset=None):
+  def __init__(self,segment,trip_id=None,offset=None):
     """
     Creates a schedule matchup based on the specified tracked segment.
     If trip_id is specified, uses the GTFS schedule for that trip ID,
     otherwise uses the trip ID specified in the database.
     If offset is specified, then that offset is applied against GTFS
     data, otherwise the offset specified in the database is used.
+    segment can be either the segment_id in the tracked_routes table
+    stored in the database, or it can be a GPSBusTrack object.
     """
-    self.segment = gpstool.TrackedVehicleSegment(segment_id,
-                                                 useCorrectedGTFS=False);
+
+    if isinstance(segment,basestring):
+      self.segment = gpstool.TrackedVehicleSegment(segment_id,
+                                                   useCorrectedGTFS=False);
+    else: #this is almost a hack
+      self.segment = segment
+
     if offset is not None: 
       self.segment.offset = offset
       
@@ -126,7 +133,11 @@ class GPSBusSchedule(object):
       self.segment.schedule = GTFSBusSchedule(trip_id,self.segment.offset);
       
     self.schedule = self.segment.schedule;
-    self.bustrack = GPSBusTrack(self.segment);
+
+    if isinstance(segment,basestring):
+      self.bustrack = GPSBusTrack(self.segment);
+    else:
+      self.bustrack = segment
 
     self.corrected_schedule = None; #don't make it unless someone wants it
     self.__matchSchedule();

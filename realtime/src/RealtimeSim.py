@@ -9,6 +9,7 @@ sys.path.append(coredir)
 sfmtadir = mydir + "/../../nextmuni_import/src/"
 sys.path.append(sfmtadir)
 
+from RealtimeConfig import config
 import GPSDataTools
 import GPSBusTrack
 import datetime
@@ -25,16 +26,11 @@ class GPSTrackState(object):
     self.last_routetag = None
     self.last_dirtag = None
 
-  def getTrack(self, reversed = False):
+  def getTrack(self):
     """
-    Returns track history in list. If reversed is
-    False, order is from oldest to newest. Otherwise,
-    newest to oldest.
+    Returns track history in list from oldest to newest.
     """
-    if reversed:
-      return list(self.track.__reversed__())
-    else:
-      return list(self.track)
+    return list(self.track)
 
 
   def updateTrack(self, vreport):
@@ -47,20 +43,28 @@ class GPSTrackState(object):
     If no GTFS match is discovered, or the vehicle didn't change
     routes, returns None.
 
-    Otherwise, returns ( (trip_id,offset,error), segment_id )
+    Otherwise, returns ( (trip_id,offset,error), segment )
       where (trip_id, offset, error) are the gtfs matchup info
-      as returned by GPSBusTrack.getMatchingGTFSTripID(),
-      and segment_id is the 
+      as returned by GPSBusTrack.getMatchingGTFSTripID().
+
+      If intermediate values are stored in the database, segment is 
+      the segment_id of the stored TrackedVehicleSegment. Otherwise
+      segment is the GPSBusTrack used to find the matching GTFS trip.
     """
     if self.track and vreport == self.track[-1]:
       return None
     
     ret = None
 
-    if self.track and (vreport.route_tag != self.last_routetag \
-                         or vreport.dirtag != self.last_dirtag):
+    if self.track and (vreport.route_tag != self.last_routetag 
+                       or vreport.dirtag != self.last_dirtag):
       veh_seg = GPSDataTools.VehicleSegment(self.track)
-      segment_id, gtfsinfo = veh_seg.export_segment()
+
+      if config['store_intermediate'] is True:
+        segment, gtfsinfo = veh_seg.export_segment()
+      else:
+        segment = GPSBusTrack.GPSBusTrack(veh_seg)
+        gtfsinfo = segment.getMatchingGTFSTripID()
 
       if gtfsinfo is None and len(self.track) > 1:
         print "Segment ended but no GTFS trip found (%d interp pts)" \
@@ -71,7 +75,7 @@ class GPSTrackState(object):
         print "  " + "\n  ".join(map(str,self.track))
       
       elif gtfsinfo is not None:
-        ret = gtfsinfo, segment_id
+        ret = gtfsinfo, segment
 
       
       self.track = []

@@ -90,7 +90,7 @@ def make_xml(sched,date,maxerr_seconds):
 
 def main():
   import sys
-  if len(sys.argv) > 2:
+  if len(sys.argv) > 1:
     errsecs = int(sys.argv[1])
   else:
     errsecs=0

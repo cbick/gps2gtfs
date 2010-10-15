@@ -29,18 +29,20 @@ class Uploader(asyncore.dispatcher):
     return 0
 
   def handle_connect(self):
-    print "Connected"
+    pass
+    #print "Connected"
     
   def handle_close(self):
-    print "Closed."
+    pass
+    #print "Closed."
 
   def handle_write(self):
-    print "Uploading..."
+    #print "Uploading..."
     
     bytes = self.send(self.xml)
     self.xml = self.xml[bytes:]
     if self.xml == "":
-      print "done."
+      #print "done."
       self.close()
 
 ul = Uploader(xml,port)
