@@ -10,8 +10,8 @@ def get_stops( min_lat, max_lat, min_lon, max_lon ):
                              'stop_name' : stop['stop_name'] },
               stops)
 
-def get_stop_info(stop_id, dayofweek):
-  sinfos = rtdb.get_stop_info(stop_id,dayofweek)
+def get_stop_info(stop_id, dow):
+  sinfos = rtdb.get_stop_info(stop_id,dow)
   # eventually we'll construct a list of routeinfos
   rinfos = {}
   for sinfo in sinfos:
@@ -29,8 +29,7 @@ def get_stop_info(stop_id, dayofweek):
   return list(rinfos.values())
 
 
-def get_percentile( lateness_bounds,
-                    gtfs_trip_id, stop_sequence, stop_id, day_of_week ):
+def get_percentile( bounds, trip_id, stop_seq, dow ):
   """
   Given bounds [(min1,max1),(min2,max2),...], a sequence of lower and upper 
   bounds on lateness in minutes, and the identifying information for a 
@@ -42,8 +41,7 @@ def get_percentile( lateness_bounds,
   Returns None if the identifying information does not identify a known
   arrival.
   """
-  return rtdb.measure_prob_mass( gtfs_trip_id, stop_id, day_of_week, 
-                                 stop_sequence, lateness_bounds )
+  return rtdb.measure_prob_mass( trip_id, None, dow, stop_seq, bounds )
 
 
 
