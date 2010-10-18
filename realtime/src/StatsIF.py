@@ -11,6 +11,7 @@ def get_stops( min_lat, max_lat, min_lon, max_lon ):
               stops)
 
 def get_stop_info(stop_id, dow):
+  dow = int(dow)
   sinfos = rtdb.get_stop_info(stop_id,dow)
   # eventually we'll construct a list of routeinfos
   rinfos = {}
@@ -58,7 +59,7 @@ Usage: %s min_minutes max_minutes trip_id stop_seq stop_id dow
     print usage
     sys.exit(1)
 
-  print get_percentile(*args[1:])
+  print get_percentile( (args[1],args[2]), *args[3:])
 
 if __name__=="__main__":
   main()

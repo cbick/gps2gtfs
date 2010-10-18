@@ -11,7 +11,9 @@ def init_config():
     print "realtime.config not found."
   
   defaults = {
-    'store_intermediate' : 'False'
+    'store_intermediate' : 'False',
+    'min_lateness_minutes' : '-20',
+    'max_lateness_minutes' : '40'
     }
 
   for key,default in defaults.items():

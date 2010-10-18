@@ -174,13 +174,16 @@ from simplified_lateness_observations slo
 def get_stops( min_lat, max_lat, min_lon, max_lon ):
   sql = """\
 select * from gtf_stops 
-where stop_lat >= min_lat 
-  and stop_lat <= max_lat
-  and stop_lon >= min_lon
-  and stop_lon <= max_lon
+where stop_lat >= %(min_lat)s
+  and stop_lat <= %(max_lat)s
+  and stop_lon >= %(min_lon)s
+  and stop_lon <= %(max_lon)s
 """
   cur = get_cursor()
-  SQLExec(cur,sql)
+  SQLExec(cur,sql,{'min_lat':min_lat,
+                   'max_lat':max_lat,
+                   'min_lon':min_lon,
+                   'max_lon':max_lon})
   rows = cur.fetchall()
   cur.close()
   return map(dict,rows)
@@ -192,21 +195,19 @@ def get_stop_info( stop_id, day_of_week ):
   ## Need to define a way of handling the "day of week"
   ## problem in terms of service IDs.
   if 0 <= day_of_week <= 4:
-    service_id = 1
+    service_id = '1'
   elif day_of_week == 5:
-    service_id = 2
+    service_id = '2'
   elif day_of_week == 6:
-    service_id = 3
+    service_id = '3'
   else:
     raise Exception, "Not a day of week"
 
   sql = """\
 select * 
 from gtf_stop_times gst
-  inner join gtf_trips gt
-  inner join gtf_routes gr
-    on gst.trip_id = gt.trip_id
-      and gt.route_id = gr.route_id
+  inner join gtf_trips gt on gst.trip_id = gt.trip_id
+  inner join gtf_routes gr on gt.route_id = gr.route_id
 where gst.stop_id=%(stopid)s
   and gt.service_id=%(sid)s
 order by gr.route_short_name, gst.arrival_time_seconds
