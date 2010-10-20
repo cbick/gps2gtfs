@@ -57,7 +57,25 @@ class VehicleReport(object):
     self.route_tag = routetag
     self.dirtag = dirtag
     self.reported_update_time = reported_update_time
-    
+
+  def __str__(self):
+    return """\
+vehicle %s on route %s, dirtag %s:  %s, %s, time %s
+""" % (self.vehicle_id, self.route_tag, self.dirtag,
+       self.lat,self.lon,self.reported_update_time)
+
+  def __eq__(self,other):
+    return (self.vehicle_id, self.lat, self.lon, self.route_tag,
+            self.dirtag, self.reported_update_time) \
+            == (other.vehicle_id, other.lat, other.lon, other.route_tag,
+                other.dirtag, other.reported_update_time)
+
+  def dayOfWeek(self):
+    """
+    0123456 = MTWThFSSu
+    """
+    return self.reported_update_time.weekday()
+
   def timeInSecondsIntoDay(self):
     t = self.reported_update_time
     h,m,s = t.hour,t.minute,t.second
@@ -71,6 +89,7 @@ class VehicleSegment(object):
   def __init__(self,reports):
     self.reports = reports
     self.dirtag = reports[-1].dirtag
+    self.routetag = reports[-1].route_tag
     self.lations = [[r.lat,r.lon] for r in reports]
     self.shape = None
     self.valid = True
@@ -79,13 +98,22 @@ class VehicleSegment(object):
     """
     Returns (routeID,directionID) for this trip.
     """
-    route_id = db.get_route_for_dirtag(self.dirtag);
+    route_id = db.get_route_for_dirtag(self.dirtag, routetag = self.routetag);
     dir_id = db.get_direction_for_dirtag(self.dirtag);
+    print "Dirtag",self.dirtag,"routetag",self.routetag,"matched to",
+    print route_id,dir_id
     return (route_id,dir_id);
 
   def export_segment(self):
     """
     Exports this segment to the database.
+    Returns ( segment_id, (trip_id,offset,error) ),
+      where segment_id is the tracked_vehicle_segment ID as exported
+      into the database,
+      and (trip_id,offset,error) are the gtfs matchup info as returned
+      by GPSBusTrack.getMatchingGTFSTripID(). 
+
+    If no match is found, returns None.
     """
     from GPSBusTrack import GPSBusTrack
     segID = db.getMaxSegID()+1;
@@ -100,6 +128,7 @@ class VehicleSegment(object):
     rows=[(r.lat,r.lon,r.reported_update_time) for r in self.reports]
     veh_id = self.reports[0].vehicle_id;
     db.export_gps_route(trip_id, trip_date, segID, veh_id, error, offset, rows);
+    return segID, tinfo
 
 
 class TrackedVehicleSegment(object):

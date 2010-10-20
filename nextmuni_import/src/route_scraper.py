@@ -40,6 +40,30 @@ def read_routes(fname):
                  map(str.strip,lines));
   return lines;
 
+
+def parse_xml(routes,xmldata):
+  # parse xml for the route
+  doc = xml.parseString(xmldata);
+
+  retrieve_time = dt.datetime.fromtimestamp( 
+    int(doc.getElementsByTagName('retrieveTime')[0].getAttribute("time"))
+    )
+  print "Retrieve time:",retrieve_time.ctime()
+
+  attributes = [ 'id', 'routeTag', 'dirTag', 'lat', 'lon', 'secsSinceReport', 
+                 'predictable', 'heading' ];
+  updated_data = [];
+  # Save the tracking data
+  vehicles = doc.getElementsByTagName('vehicle');
+  for vehicle in vehicles:
+    vehdata = {'update_time':retrieve_time}
+    for attr in attributes:
+      vehdata[attr] = vehicle.getAttribute(attr);
+    if (not routes) or (vehdata['routeTag'] in routes):
+      updated_data.append(vehdata);
+
+  return updated_data;
+
 def get_updated_routes(routes):
   format_URL = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni&t=0"
 

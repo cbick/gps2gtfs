@@ -186,11 +186,11 @@ class BusTrack(object):
         continue
 
       within_tol = True;
-        
+      
 
     if not within_tol:
       # We never entered a tolerance zone
-      #print "XXX No arrival, min dist was:",min_dist
+      print "XXX No arrival, min dist was:",min_dist
       return None  
     
     #print "OOO Arrival with distance:",min_dist

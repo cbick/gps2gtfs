@@ -108,28 +108,38 @@ class GPSBusSchedule(object):
   This class also serves as a central source for GTFSBusSchedule, 
   GPSBusTrack, and GTFSBusTrack objects.
   """
-  def __init__(self,segment_id,trip_id=None,offset=None):
+  def __init__(self,segment,trip_id=None,offset=None):
     """
     Creates a schedule matchup based on the specified tracked segment.
     If trip_id is specified, uses the GTFS schedule for that trip ID,
     otherwise uses the trip ID specified in the database.
     If offset is specified, then that offset is applied against GTFS
     data, otherwise the offset specified in the database is used.
+    segment can be either the segment_id in the tracked_routes table
+    stored in the database, or it can be a GPSBusTrack object.
     """
-    self.segment = gpstool.TrackedVehicleSegment(segment_id,
-                                                 useCorrectedGTFS=False);
+
+    if isinstance(segment,basestring):
+      self.segment = gpstool.TrackedVehicleSegment(segment_id,
+                                                   useCorrectedGTFS=False);
+    else: #this is almost a hack
+      self.segment = segment
 
     if offset is not None: 
       self.segment.offset = offset
-
+      
     if trip_id is not None:
       self.segment.trip_id = trip_id;
       self.segment.schedule = GTFSBusSchedule(trip_id,self.segment.offset);
       
     self.schedule = self.segment.schedule;
-    self.bustrack = GPSBusTrack(self.segment);
 
-    self.corrected_schedule = None; #don't make it 'til someone wants it
+    if isinstance(segment,basestring):
+      self.bustrack = GPSBusTrack(self.segment);
+    else:
+      self.bustrack = segment
+
+    self.corrected_schedule = None; #don't make it unless someone wants it
     self.__matchSchedule();
 
 
@@ -141,6 +151,9 @@ class GPSBusSchedule(object):
 
   def getGPSBusTrack(self):
     return self.bustrack;
+
+  def getTrackedVehicleSegment(self):
+    return self.segment;
 
   def getGTFSBusTrack(self, use_shape = False):
     if self.corrected_schedule is None:
@@ -161,7 +174,7 @@ class GPSBusSchedule(object):
     lasttime = self.segment.min_time
     prev_arrival_time = None
     prev_stop_id = None
-
+    
     for stop,interp in zip(self.schedule.stops,self.schedule.interpolation):
       lat,lon = interp[:2]
 
@@ -171,10 +184,10 @@ class GPSBusSchedule(object):
         starttime = lasttime);
 
       if arrival_time is None:
-      #  print "NO ARRIVAL FOUND FOR STOP AT %d" %(time,)
+        #print "NO ARRIVAL FOUND FOR STOP AT %d" %(lasttime,)
         pass
       else:
-      #  print "arrival for stop at %d" %(time,)
+        #print "arrival for stop at %d" %(lasttime,)
         if str(arrival_time) == 'nan':
           raise Exception, "asdf"
         lasttime = arrival_time;
@@ -284,6 +297,8 @@ class GPSBusTrack(BusTrack):
     if start_time is None:
       return None
     route_id,dir_id = self.segment.getGTFSRouteInfo();
+    if route_id is None or dir_id is None:
+      return None
     
     matches = db.get_best_matching_trip_ID(route_id,dir_id,start_date,
                                            start_time,num_results=search_size);
@@ -400,7 +415,7 @@ class GPSBusTrack(BusTrack):
     then the distance returned from this route with a GTFS trip 
     with no overlap in time will be 0!
     """
-    schedule = GTFSBusSchedule(trip_id);
+    schedule = GTFSBusSchedule(trip_id,offset=offset_seconds);
     #'bounding boxes' of our time interval and of the GTFS trip's time interval
     bbox = self.getRouteTimeInterval(); 
     sched_bbox = schedule.getRouteTimeInterval();
@@ -462,7 +477,7 @@ class GPSBusTrack(BusTrack):
 
     ## Now check along the GTFS route
     for i,pt in enumerate(schedule.interpolation):
-      stoptime = pt[2] - offset_seconds
+      stoptime = pt[2] #- offset_seconds
       myloc = self.getLocationAtTime(stoptime);
       if myloc is None: # then GTFS is out of bounds of GPS time window
         oob_count += 1
@@ -476,7 +491,7 @@ class GPSBusTrack(BusTrack):
 
     ret = math.sqrt( ret/(len(schedule.interpolation)+vstops) )
     print "  Matching id",trip_id,"start time:",
-    print schedule.interpolation[0][2]-offset_seconds,
+    print schedule.interpolation[0][2], #-offset_seconds,
     print "  distance: %9.2f OOB count: %2d/%2d"%(ret,oob_count,
                                                   len(schedule.interpolation))
     return ret,float(oob_count)/len(schedule.interpolation)

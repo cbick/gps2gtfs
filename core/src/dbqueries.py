@@ -180,21 +180,35 @@ def getGTFSTripData(trip_id):
 
 
 
-def get_route_for_dirtag(dirtag):
+def get_route_for_dirtag(dirtag,routetag=None):
   """
-  Given a nextbus dirtag, returns the GTFS route ID
+  Given a nextbus dirtag, returns the GTFS route ID if known.
+  If routetag is provided, and the GTFS route ID is not known,
+  attempts to make a match based off the routetag alone.
   """
   cur = get_cursor();
   SQLExec(cur,
           """Select route_id from routeid_dirtag where dirtag=%(dirtag)s""",
           {'dirtag':dirtag});
   ret = [r[0] for r in cur];
+
+  if not ret and routetag:
+    SQLExec(cur,
+            """select route_id from gtf_routes gr 
+               where gr.route_short_name=%(routetag)s""",
+            {'routetag':routetag})
+    ret = [r[0] for r in cur]  
+
   cur.close()
 
   if len(ret) > 1:
     print "MORE THAN ONE ROUTE PER DIRTAG"
     print "  dirtag:",dirtag
     print "  routes:",ret
+  if len(ret) == 0:
+    print "No routes mapped for dirtag",dirtag
+    
+    return None
   return ret[0]
 
 def get_direction_for_dirtag(dirtag):
@@ -744,4 +758,56 @@ where vt.dirtag != 'null' and vt.dirtag is not null)
   cur.close()
 
 
+def export_lateness_data( gpssched, sched_error ):
+  """
+  Given a GPSBusSchedule gpssched, adds entries into the datamining_table
+  which records observations of lateness along with their attributes.
+  """
+  
+  sql = """
+insert into datamining_table dt
+( gps_segment_id, gtfs_trip_id, rms_schedule_error, vehicle_id,
+  route_name, vehicle_type, service_id, direction_id,
+  stop_lat, stop_lon, stop_id, stop_sequence,
+  scheduled_arrival_time, scheduled_departure_time,
+  actual_arrival_time, lateness, prev_stop_id )
+values
+( null, %(trip_id)s, %(sched_err)s, %(vehid)s,
+  %(routename)s, %(vehtype)s, %(service_id)s, %(dir_id)s,
+  %(stoplat)s,%(stoplon)s,%(stopid)s,%(stopseq)s,
+  %(sched_arr)s,%(sched_dep)s,%(actual_arr)s,%(lateness)s,
+  %(prev_stop_id)s )
+"""
+  
+  gtfs = gpssched.getGTFSSchedule()
 
+  basedict = { 'trip_id' : gtfs.trip_id,
+               'sched_err' : sched_error,
+               'vehid' : gpssched.segment.vehicle_id,
+               'routename' : gtfs.route_short_name,
+               'vehtype' : gtfs.route_type,
+               'service_id' : gtfs.service_id,
+               'dir_id' : gtfs.direction_id
+               }
+
+  cur = get_cursor()
+  
+  for arrival in gpssched.getGPSSchedule():
+    print dict(arrival)
+    stopdict = dict(basedict)
+    stopdict.update ( { 'stoplat' : arrival['stop_lat'],
+                        'stoplon' : arrival['stop_lon'],
+                        'stopid' : arrival['stop_id'],
+                        'stopseq' : arrival['stop_sequence'],
+                        'sched_arr' : arrival['arrival_time_seconds'],
+                        'sched_dep' : arrival['departure_time_seconds'],
+                        'actual_arr' : arrival['actual_arrival_time_seconds'],
+                        'lateness' : arrival['actual_arrival_time_seconds'] \
+                          - arrival['departure_time_seconds'],
+                        'prev_stop_id' : arrival['prev_stop_id']
+                        } )
+    SQLExec(cur, sql, stopdict)
+
+
+  cur.close()
+  

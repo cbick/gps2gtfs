@@ -70,7 +70,6 @@ def get_db_conn(params=db_params):
 
 def get_cursor():
   cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-  #cur = conn.cursor()
   return cur
 
 def close_db_conn():

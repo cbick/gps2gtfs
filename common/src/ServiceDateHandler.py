@@ -84,13 +84,15 @@ class ServiceDateHandler(object):
 
 
   def effective_service_ids(self,day):
-    """Given a day (date object), returns a collection of service IDs
-    that are in effect on that day"""
+    """
+    Given a day (date object), returns a collection of service IDs
+    that are in effect on that day
+    """
     service_ids = set()
     dayOfWeek = day.weekday() #0-6 for Mon-Sun
     for row in self.calendar_rows:     
       # recall we selected mon,tues,... first in the query
-      if int(row[dayOfWeek]): 
+      if int(row[dayOfWeek]):
         #this service runs on this day of the week
         if row['start_date'] <= day and row['end_date'] >= day: 
           #this service applies to this date
@@ -114,22 +116,21 @@ class ServiceDateHandler(object):
 
   def getComboID(self,day):
     service_ids = tuple(self.effective_service_ids(day));
-    if self.existing_combos.has_key(service_ids):
-      return self.existing_combos[service_ids]
-    return None
+    return self.existing_combos.get( service_ids, None )
 
   def getCombos(self):
-    ret= {}; ret.update(self.combos);
-    return ret;
+    return dict(self.combos)
 
 
   def fill_unique_service_combinations(self,dbconn,commit):
-    """Throughout all dates which have service IDs in effect, this method
+    """
+    Throughout all dates which have service IDs in effect, this method
     finds every unique combination of service IDs that are in effect
     simultaneously. The service_combinations table is then populated with
     a 1-to-many map from combination_id to service_id where each combination_id
     represents a unique combination of service IDs. If a matching combination_id
-    already exists, then it is left alone."""
+    already exists, then it is left alone.
+    """
 
     cur = db.get_cursor()  
   
