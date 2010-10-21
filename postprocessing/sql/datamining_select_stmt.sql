@@ -1,5 +1,6 @@
 -- some aggregate functions need to be created first, see
 -- aggregate_functions.sql
+insert into table datamining_table (
 
 select gst.gps_segment_id, 
        gsegs.trip_id as gtfs_trip_id, 
@@ -36,7 +37,6 @@ select gst.gps_segment_id,
        sinfo.prev_stop_distance_meters as prev_stop_distance,
        sinfo.cumulative_distance_meters as stop_distance
 
-into table datamining_table
 
 
 from gps_stop_times gst 
@@ -51,7 +51,8 @@ from gps_stop_times gst
                 and sinfo.stop_sequence = gst.stop_sequence
 
 order by gst.gps_segment_id, gst.stop_sequence
-;
+
+);
 
 
 create index dmix_rss on datamining_table(route_name,prev_stop_id,stop_id);

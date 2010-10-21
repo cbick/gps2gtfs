@@ -6,7 +6,6 @@ except:
 from RealtimeConfig import config
 import re
 
-__bpattern = re.compile("([-]?[\d]+|[-]?inf|)_([-]?[\d]+|inf|)")
 
 def parse_query_string(qstr):
   ret = {}
@@ -15,6 +14,7 @@ def parse_query_string(qstr):
     ret[item.lower()] = val
   return ret
 
+__bpattern = re.compile("([-]?[\d]+|[-]?inf|)_([-]?[\d]+|inf|)")
 def parse_bounds_string(boundstr):
   global __bpattern
   ret = []
