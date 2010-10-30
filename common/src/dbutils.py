@@ -74,12 +74,15 @@ def get_cursor():
 
 def close_db_conn():
   global conn;
-  if not conn:
+  if conn is None:
     return;
-  conn.close()
+  try:
+    conn.close()
+  except:
+    pass
   conn = None;
 
-conn = get_db_conn();
+get_db_conn();
 
 
 
