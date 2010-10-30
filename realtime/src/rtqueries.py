@@ -221,3 +221,31 @@ order by gr.route_short_name, gst.arrival_time_seconds
   return map(dict,rows)
 
 
+def simplified_lateness_counts():
+  """
+  This is a one-time function to translate all data from datamining_table
+  into simplified_lateness_observations.
+  """
+  sql = """
+select dm.lateness, dm.gtfs_trip_id, dm.stop_id, dm.stop_sequence, 
+  EXTRACT(DOW FROM gs.trip_date) as dow
+from datamining_table dm
+  inner join gps_segments gs on gs.gps_segment_id = dm.gps_segment_id
+"""
+
+  cur = get_cursor()
+  SQLExec(cur,sql);
+  rows = cur.fetchall();
+  cur.close()
+
+  tot = len(rows)
+  i=1
+  for row in rows:
+    if row['lateness'] is None:
+      continue
+    if i%1000 == 0:
+      print i,"/",tot
+    i+=1
+    lateness_observed( row['gtfs_trip_id'], row['stop_id'],
+                       row['dow'], row['stop_sequence'], row['lateness'],
+                       auto_create = True );
