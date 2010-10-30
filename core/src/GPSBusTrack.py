@@ -119,8 +119,8 @@ class GPSBusSchedule(object):
     stored in the database, or it can be a GPSBusTrack object.
     """
 
-    if isinstance(segment,basestring):
-      self.segment = gpstool.TrackedVehicleSegment(segment_id,
+    if isinstance(segment,basestring) or isinstance(segment,long):
+      self.segment = gpstool.TrackedVehicleSegment(segment,
                                                    useCorrectedGTFS=False);
     else: #this is almost a hack
       self.segment = segment
@@ -134,7 +134,7 @@ class GPSBusSchedule(object):
       
     self.schedule = self.segment.schedule;
 
-    if isinstance(segment,basestring):
+    if isinstance(segment,basestring) or isinstance(segment,long):
       self.bustrack = GPSBusTrack(self.segment);
     else:
       self.bustrack = segment

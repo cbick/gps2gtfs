@@ -112,4 +112,34 @@ create table gtf_stoptimes_information (
                               --to get from the previous stop to this stop.
 );
 
+
+create table datamining_table (
+  gps_segment_id text, 
+  gtfs_trip_id text, 
+  rms_schedule_error numeric, 
+  vehicle_id text,
+  route_name text, 
+  vehicle_type text, 
+  service_id text, 
+  direction_id integer,
+  stop_lat double precision, 
+  stop_lon double precision, 
+  stop_id text, 
+  stop_sequence integer,
+  scheduled_arrival_time integer, 
+  scheduled_departure_time integer,
+  actual_arrival_time integer, 
+  lateness integer, 
+  seconds_since_last_stop integer,
+  prev_stop_id text,
+
+  scheduled_hour_of_arrival integer,
+  sched_trip_start_time integer,
+  trip_length_meters numeric,
+  trip_duration_seconds integer,
+  stop_number integer,
+  prev_stop_distance numeric,
+  stop_distance numeric
+);
+
 commit;
