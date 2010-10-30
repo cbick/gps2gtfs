@@ -1,6 +1,6 @@
 -- some aggregate functions need to be created first, see
 -- aggregate_functions.sql
-insert into table datamining_table (
+insert into datamining_table (
 
 select gst.gps_segment_id, 
        gsegs.trip_id as gtfs_trip_id, 
@@ -30,8 +30,8 @@ select gst.gps_segment_id,
 
        tinfo.first_arrival-gsegs.schedule_offset_seconds
          as sched_trip_start_time,
-       tinfo.trip_length_meters as trip_length,
-       tinfo.trip_duration_seconds as sched_trip_duration,
+       tinfo.trip_length_meters as trip_length_meters,
+       tinfo.trip_duration_seconds as trip_duration_seconds,
 
        sinfo.trip_stop_number as stop_number,
        sinfo.prev_stop_distance_meters as prev_stop_distance,
