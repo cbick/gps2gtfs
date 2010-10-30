@@ -119,7 +119,7 @@ create table datamining_table (
   rms_schedule_error numeric, 
   vehicle_id text,
   route_name text, 
-  vehicle_type integer, 
+  vehicle_type text, 
   service_id text, 
   direction_id integer,
   stop_lat double precision, 
@@ -130,6 +130,7 @@ create table datamining_table (
   scheduled_departure_time integer,
   actual_arrival_time integer, 
   lateness integer, 
+  seconds_since_last_stop integer,
   prev_stop_id text,
 
   scheduled_hour_of_arrival integer,
