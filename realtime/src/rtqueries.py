@@ -232,27 +232,27 @@ def simplified_lateness_counts():
   """
   sql = """
 select dm.lateness, dm.gtfs_trip_id, dm.stop_id, dm.stop_sequence, 
-  EXTRACT(DOW FROM gs.trip_date) as dow
+  ((EXTRACT(DOW FROM gs.trip_date) + 6)::integer % 7) as dow
 from datamining_table dm
   inner join gps_segments gs on gs.gps_segment_id = dm.gps_segment_id
 """
 
   cur = get_cursor()
   SQLExec(cur,sql);
-  rows = cur.fetchall();
-  cur.close()
 
-  tot = len(rows)
+  tot = cur.rowcount
   i=1
-  for row in rows:
+  for row in cur:
     if row['lateness'] is None:
       continue
     if i%1000 == 0:
       print i,"/",tot
     i+=1
     lateness_observed( row['gtfs_trip_id'], row['stop_id'],
-                       row['dow'], row['stop_sequence'], row['lateness'],
+                       row['dow'], 
+                       row['stop_sequence'], row['lateness'],
                        auto_create = True );
+  cur.close()
 
 
 def get_routes_for_stop( stop_id ):

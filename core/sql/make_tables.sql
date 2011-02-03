@@ -7,7 +7,7 @@ drop table gps_stop_times cascade;
 drop table gps_segments cascade;
 drop table gtf_trip_information cascade;
 drop table gtf_stoptimes_information cascade;
-
+drop table datamining_table cascade;
 
 begin;
 
@@ -83,7 +83,7 @@ create table gps_stop_times (
 
 
 create table gps_segments (
-  gps_segment_id bigint , --unique identifier for this gps trip
+  gps_segment_id bigserial , --unique identifier for this gps trip
   trip_id text, --references gtf_trips(trip_id)
   schedule_error numeric, --unique for (trip_id,trip_date) only
   schedule_offset_seconds integer, --seconds to subtract from GTFS times

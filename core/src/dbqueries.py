@@ -352,14 +352,14 @@ def get_previous_trip_ID(trip_id, start_date, offset, numtrips=10):
   today_ids = map(lambda sid: "'"+str(sid)+"'", 
                   get_serviceIDs_for_date(start_date));
   sql = """(select trip_id, 0 as offset,
-                  abs(first_departure-%(start_time)s) as diff 
+                  abs(first_departure- %(start_time)s) as diff 
              from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(today_ids) + """)
                and first_departure < %(start_time)s
            union
            select trip_id, 86400 as offset,
-                 abs(first_departure-86400-%(start_time)s) as diff
+                 abs(first_departure-86400- %(start_time)s ) as diff
              from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(yesterday_ids) + """)
@@ -446,41 +446,21 @@ def get_best_matching_trip_ID(route_id, dir_id, start_date, start_time,
   return ret
 
 
-def getMaxSegID():
-  """
-  Returns the largest vehicle segment ID found in the "tracked_routes"
-  table (see the export_gps_route function below). This can be used to
-  construct a unique ID for further segments.
-
-  Note that there should be a 1-1 correspondence between segment and
-  trip IDs for any particular service day. Of course part of the point
-  of this is to eliminate any cases where this is not true in a meaningful
-  way.
-  """
-  sql = """select max(gps_segment_id) from gps_segments"""
-  cur = get_cursor()
-  SQLExec(cur,sql);
-  ret = [r['max'] for r in cur];
-  cur.close();
-
-  if ret[0] is None:
-    return 0;
-  return ret[0];
-
 
   
 
-def export_gps_route( trip_id, trip_date, segment_id, vehicle_id, 
+def export_gps_route( trip_id, trip_date, vehicle_id, 
                       gtfs_error, offset_seconds,
-                      gps_data, segment_exists = False):
+                      gps_data ):
   """
   Writes the given entry to the "tracked_routes" table. This table is used
   to cache the results of finding and filtering only the valid routes as
   represented in the GPS dataset.
+
+  Returns segment_id, a unique identifier for this GPS segment
   
   trip_id: the GTFS trip id
   trip_date: the date of the trip
-  segment_id: unique identifier for this GPS segment (see getMaxSegID())
   vehicle_id: as reported in the GPS data
   gtfs_error: The distance from the matched GTFS trip as measured by
               the GPSBusTrack metric
@@ -490,17 +470,18 @@ def export_gps_route( trip_id, trip_date, segment_id, vehicle_id,
             reported in the GPS dat. Note that reported_update_time should
             be a timestamp.
 
+
   WARNING: No effort is made to prevent duplicate entries! If you do this
   more than once for the same route then YOU MUST DELETE IT FIRST!
   """
 
   sql1 = """insert into gps_segments (
-              gps_segment_id, trip_id, trip_date, vehicle_id,
+              trip_id, trip_date, vehicle_id,
               schedule_error, schedule_offset_seconds
          ) VALUES (
-               %(seg_id)s,%(trip_id)s,%(trip_date)s,%(vehicle_id)s,
+               %(trip_id)s,%(trip_date)s,%(vehicle_id)s,
                %(gtfs_error)s, %(offset)s
-         )"""
+         ) RETURNING gps_segment_id"""
 
   sql2 = """insert into tracked_routes (
                gps_segment_id, lat, lon, reported_update_time
@@ -509,11 +490,11 @@ def export_gps_route( trip_id, trip_date, segment_id, vehicle_id,
              )"""
   cur = get_cursor()
 
-  if not segment_exists:
-    SQLExec(cur,sql1,
-            {'trip_id':trip_id,'trip_date':trip_date,'vehicle_id':vehicle_id,
-             'gtfs_error':str(gtfs_error),'seg_id':str(segment_id),
-             'offset':offset_seconds});
+  
+  SQLExec(cur,sql1,
+          {'trip_id':trip_id,'trip_date':trip_date,'vehicle_id':vehicle_id,
+           'gtfs_error':str(gtfs_error),'offset':offset_seconds});
+  segment_id = list(cur.fetchall())[0][0];
   
   for lat,lon,reported_update_time in gps_data:
     SQLExec(cur,sql2,
@@ -522,7 +503,7 @@ def export_gps_route( trip_id, trip_date, segment_id, vehicle_id,
              'seg_id':str(segment_id)});
 
   cur.close()
-
+  return segment_id
 
 def load_gps_segment_header(segment_id):
   """
