@@ -76,7 +76,7 @@ class GPSSchedule(object):
     where mu_e = mean of all early arrival times
     and   mu_l = mean of all late arrival times.
 
-    Can optionall specify a static arrival schedule to calculate.
+    Can optionally specify a static arrival schedule to calculate.
     """
     mu_e,mu_l=0.0,0.0
     n_e,n_l=0,0
@@ -119,10 +119,10 @@ class GPSBusSchedule(object):
     stored in the database, or it can be a GPSBusTrack object.
     """
 
-    if isinstance(segment,basestring):
-      self.segment = gpstool.TrackedVehicleSegment(segment_id,
+    if isinstance(segment,basestring) or isinstance(segment,long):
+      self.segment = gpstool.TrackedVehicleSegment(segment,
                                                    useCorrectedGTFS=False);
-    else: #this is almost a hack
+    else:
       self.segment = segment
 
     if offset is not None: 
@@ -134,7 +134,7 @@ class GPSBusSchedule(object):
       
     self.schedule = self.segment.schedule;
 
-    if isinstance(segment,basestring):
+    if isinstance(segment,basestring) or isinstance(segment,long):
       self.bustrack = GPSBusTrack(self.segment);
     else:
       self.bustrack = segment
@@ -178,16 +178,22 @@ class GPSBusSchedule(object):
     for stop,interp in zip(self.schedule.stops,self.schedule.interpolation):
       lat,lon = interp[:2]
 
-      arrival_time = self.bustrack.getArrivalTimeAtLocation(
-        stoploc=(lat,lon),
-        tol=150.0, # meters
-        starttime = lasttime);
-
-      if arrival_time is None:
-        #print "NO ARRIVAL FOUND FOR STOP AT %d" %(lasttime,)
-        pass
+      arrivals = self.bustrack.getTimesAtLocation( stoploc=(lat,lon),
+                                                   tol=25.0, # meters
+                                                   starttime = lasttime,
+                                                   findjustone = True )
+      
+      if not arrivals:
+        # Didn't sit long enough to get a close reading to the bus stop.
+        # So the best we can do is just estimate point of closest proximity
+        # and take that as both arrival and departure time.
+        arrivals = self.bustrack.getArrivalTimeAtLocation( stoploc=(lat,lon),
+                                                           tol=150.0,
+                                                           starttime = lasttime )
+        arrival_time = departure_time = arrivals
+      
       else:
-        #print "arrival for stop at %d" %(lasttime,)
+        arrival_time,departure_time,min_dist = arrivals[0]
         if str(arrival_time) == 'nan':
           raise Exception, "asdf"
         lasttime = arrival_time;
@@ -197,6 +203,7 @@ class GPSBusSchedule(object):
       entry['departure_time_seconds'] = stop['departure_time_seconds']\
                                          - self.schedule.offset
       entry['actual_arrival_time_seconds'] = arrival_time
+      entry['actual_departure_time_seconds'] = departure_time
       if None not in (arrival_time,prev_arrival_time):
         entry['seconds_since_last_stop'] = arrival_time - prev_arrival_time
       else:
@@ -204,7 +211,7 @@ class GPSBusSchedule(object):
       entry['prev_stop_id'] = prev_stop_id;
 
       sched.append( entry );
-      prev_arrival_time = arrival_time
+      prev_arrival_time = departure_time #arrival_time
       prev_stop_id = entry['stop_id'];
 
     self.arrival_schedule = sched;

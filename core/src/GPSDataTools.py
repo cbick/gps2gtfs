@@ -39,7 +39,7 @@ import gisutils as gis
 rad = math.pi / 180.0
 
 THRESH_SEG_ENDPOINT_TO_SHAPE_ENDPOINT = 50 #meters
-THRESH_TIME_BETWEEN_REPORTS = 120 # seconds
+THRESH_TIME_BETWEEN_REPORTS = 300 # seconds
 THRESH_MINIMUM_REPORTS = 10
 
 def now():
@@ -116,7 +116,7 @@ class VehicleSegment(object):
     If no match is found, returns None.
     """
     from GPSBusTrack import GPSBusTrack
-    segID = db.getMaxSegID()+1;
+    #segID = db.getMaxSegID()+1;
     bt = GPSBusTrack(self);
     tinfo = bt.getMatchingGTFSTripID();
     if tinfo is None:
@@ -127,7 +127,7 @@ class VehicleSegment(object):
     trip_date = self.reports[0].reported_update_time
     rows=[(r.lat,r.lon,r.reported_update_time) for r in self.reports]
     veh_id = self.reports[0].vehicle_id;
-    db.export_gps_route(trip_id, trip_date, segID, veh_id, error, offset, rows);
+    segID = db.export_gps_route(trip_id, trip_date, veh_id, error, offset, rows);
     return segID, tinfo
 
 
@@ -200,7 +200,7 @@ class Route(object):
   Upon initialization, all VehicleReports are found for that route,
   and subsequently segmented into appropriate VehicleSegments.
   """
-  def __init__(self,route_short_name):
+  def __init__(self,route_short_name,tzdiff=0):
     self.route_short_name = str(route_short_name)
     self.dirtags=[]
     self.shapes = {}
@@ -217,7 +217,7 @@ class Route(object):
     
     
     
-    self.load_vehicle_reports()
+    self.load_vehicle_reports(tzdiff)
     print "\tFound %s vehicles" % len(self._vehicles)
     
     print "Finding route segments..."
@@ -236,10 +236,10 @@ class Route(object):
     self.dirtags.extend(db.get_route_dirtags(self.route_short_name));
       
 
-  def load_vehicle_reports(self):
+  def load_vehicle_reports(self,tzdiff):
     print "Loading vehicle reports..."
-    rows = db.get_vehicle_reports(self.dirtags);
-    print "\tDB fetch complete.  Sorting into objects.."
+    rows = db.get_vehicle_reports(self.dirtags,tzdiff);
+    print "\tDB fetch complete (%d rows).  Sorting into objects.." % (len(rows),)
 
     def helper(row):
       vehicle_id = row['id']
@@ -267,29 +267,37 @@ class Route(object):
 
 
   def find_segments(self):
+    dropped = 0
     for vehicle in self.vehicles():
       #print "\tSegmenting Vehicle %s..." % vehicle.vehicle_id
-      reports=[]
 
       last_report = vehicle.reports[0]
+      reports=[last_report]
+
       for report in vehicle.reports[1:]:
-        if report.dirtag != last_report.dirtag:
+        report_delay = report.reported_update_time - last_report.reported_update_time
+        report_delay_seconds = 86400*report_delay.days + report_delay.seconds
+        if report.dirtag != last_report.dirtag \
+              or report_delay_seconds > THRESH_TIME_BETWEEN_REPORTS:
           if len(reports) > THRESH_MINIMUM_REPORTS:
             seg = VehicleSegment(reports);
             seg.shape = self.shape_for_dirtag(seg.dirtag)
             vehicle.segments.append(seg);
+          else:
+            dropped += 1
           reports=[]
         reports.append(report)
         last_report = report
       #print "\t\t%s segments found" % len(vehicle.segments)
-    print "\tFound %s segments" % len([s for s in self.segments()])
+    print "\tFound %d segments" % len([s for s in self.segments()])
+    print "\tDropped %d segments for being too short" % (dropped,)
     print "\tRemoving vehicles that have no segments..." 
     c=0
     for vehicle in self.vehicles():
       if not vehicle.segments:
         c+=1
         del self._vehicles[vehicle.vehicle_id]
-    print "\tRemoved %s vehicles"%c
+    print "\tRemoved %d vehicles"%c
 
   def filter_by_endpoint(self):
     print "Filtering segments by comparing segment endpoints to possible gtf_shape(s)..."
@@ -324,11 +332,14 @@ class Route(object):
       for r in seg.reports[1:]:
         t=int((r.reported_update_time - last.reported_update_time).seconds)
         avg.append(t)
-        last = r
         if t > THRESH_TIME_BETWEEN_REPORTS:
           seg.valid = False
+          dist = calcDistance( (last.lat,last.lon) , (r.lat,r.lon) )
+          print "Distance:",dist
+        last = r
       if not seg.valid:
         c+=1
+        print "Invalid, max delay:",max(avg)
     print "\t%s marked invalid" % c   
                
   def segments(self,return_valid_only=False):

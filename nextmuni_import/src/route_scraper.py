@@ -41,13 +41,24 @@ def read_routes(fname):
   return lines;
 
 
-def parse_xml(routes,xmldata):
+def parse_xml(routes,xmldata,time_retrieved=None):
+  """time_retrieved should be in seconds since epoch"""
   # parse xml for the route
   doc = xml.parseString(xmldata);
 
-  retrieve_time = dt.datetime.fromtimestamp( 
-    int(doc.getElementsByTagName('retrieveTime')[0].getAttribute("time"))
-    )
+  if time_retrieved is None:
+    retrieve_time = dt.datetime.fromtimestamp( 
+      int(doc.getElementsByTagName('retrieveTime')[0].getAttribute("time"))
+      )
+  else:
+    fstr = '%Y-%m-%dT%H-%M-%S'
+    dstr = time_retrieved[:-5]
+    retrieve_time = dt.datetime.strptime(dstr,fstr)
+    # time.strftime(fstr,time.gmtime())
+    # > '2010-10-19T22-38-47+0000'
+    # tar -ztf *.tar.gz
+    # > '2010-09-01T23-50-01-0700.tar.gz'
+    # retrieve_time = dt.datetime.fromtimestamp(int(time_retrieved))
   print "Retrieve time:",retrieve_time.ctime()
 
   attributes = [ 'id', 'routeTag', 'dirTag', 'lat', 'lon', 'secsSinceReport', 

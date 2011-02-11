@@ -26,8 +26,15 @@ def get_stop_info(stop_id, dow):
                     ('arrival_time_repr','arrival_time'),
                     ('stop_seq','stop_sequence') ):
       arrival[uk] = sinfo[dbk]
+    arrival['dow'] = dow
+    arrival['has_data'] = (sinfo['observed_stop_id'] is not None)
     rinfo['arrivals'].append(arrival)                    
   return list(rinfos.values())
+
+
+def get_routes_for_stop( stop_id ):
+  routes = rtdb.get_routes_for_stop( stop_id );
+  return routes;
 
 
 def get_percentile( bounds, trip_id, stop_seq, dow ):
@@ -53,7 +60,7 @@ def main():
 
   usage = """\
 Usage: %s min_minutes max_minutes trip_id stop_seq stop_id dow
-""" % args[0]
+""" % (args[0],)
 
   if len(args) != 7:
     print usage

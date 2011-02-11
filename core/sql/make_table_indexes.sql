@@ -9,6 +9,7 @@ CREATE INDEX vehicle_dirtag_idx ON vehicle_track (dirtag);
 create index gpsarr_time_index on gps_stop_times(actual_arrival_time_seconds);
 create index gpsdep_time_index on gps_stop_times(actual_departure_time_seconds);
 create index gpsstop_seq_index on gps_stop_times(gps_segment_id,stop_sequence);
+create index gps_segid_index on gps_stop_times(gps_segment_id);
 
 create index segid_track_index on tracked_routes(gps_segment_id);
 create index seg_sort_idx on tracked_routes(gps_segment_id,reported_update_time);

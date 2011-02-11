@@ -1,5 +1,6 @@
 -- some aggregate functions need to be created first, see
 -- aggregate_functions.sql
+insert into datamining_table (
 
 select gst.gps_segment_id, 
        gsegs.trip_id as gtfs_trip_id, 
@@ -16,7 +17,20 @@ select gst.gps_segment_id,
        gst.arrival_time_seconds as scheduled_arrival_time, 
        gst.departure_time_seconds as scheduled_departure_time, 
        gst.actual_arrival_time_seconds as actual_arrival_time,
-       gst.actual_arrival_time_seconds-departure_time_seconds as lateness,
+       gst.actual_departure_time_seconds as actual_departure_time,
+
+       CASE
+         WHEN sinfo.trip_stop_number = 0
+           THEN null
+         ELSE gst.actual_arrival_time_seconds-arrival_time_seconds 
+       END as lateness_arrive,
+
+       CASE
+         WHEN sinfo.trip_stop_number = tinfo.total_num_stops-1
+           THEN null
+         ELSE gst.actual_departure_time_seconds-departure_time_seconds
+       END as lateness_depart,
+
        gst.seconds_since_last_stop as seconds_since_last_stop,
        gst.prev_stop_id as prev_stop_id,
        CASE 
@@ -29,14 +43,13 @@ select gst.gps_segment_id,
 
        tinfo.first_arrival-gsegs.schedule_offset_seconds
          as sched_trip_start_time,
-       tinfo.trip_length_meters as trip_length,
-       tinfo.trip_duration_seconds as sched_trip_duration,
+       tinfo.trip_length_meters as trip_length_meters,
+       tinfo.trip_duration_seconds as trip_duration_seconds,
 
        sinfo.trip_stop_number as stop_number,
        sinfo.prev_stop_distance_meters as prev_stop_distance,
        sinfo.cumulative_distance_meters as stop_distance
 
-into table datamining_table
 
 
 from gps_stop_times gst 
@@ -51,7 +64,8 @@ from gps_stop_times gst
                 and sinfo.stop_sequence = gst.stop_sequence
 
 order by gst.gps_segment_id, gst.stop_sequence
-;
+
+);
 
 
 create index dmix_rss on datamining_table(route_name,prev_stop_id,stop_id);
@@ -154,38 +168,74 @@ where rm.route_name=d1.route_name
 
 -- Statistical Weighting Calculations --
 
-select count(*) from datamining_table where lateness is not null;
--- Result = Total rows with non-null lateness = 1861479
+select count(*) from datamining_table where lateness_arrive is not null;
+-- Result = Total rows with non-null lateness_arrive = 1825415
 
-select service_id,count(*) from gtf_stop_times natural join gtf_trips
-group by service_id;
--- Result = Total number (trip,stop)s on any given:
---    weekday (sid=1) = 474584
---   saturday (sid=2) = 381082
---     sunday (sid=3) = 358644
+select count(*) from datamining_table where lateness_depart is not null;
+-- Result = Total rows with non-null lateness_depart = 1855810
 
-select 5*474584 + 358644 + 381082;
--- Result: there are 3112646 total (trip,stop)s every week
--- Therefore a weekday (trip,stop) should have 5/3112646 of the total
--- count, and a weekend (trip,stop) should have 1/3112646 of the total.
+select service_id,count(*) 
+  from gtf_stoptimes_information gsi
+    natural join gtf_trips gt
+    natural join gtf_trip_information gti
+  where gti.total_num_stops-1 != gsi.trip_stop_number
+group by service_id
+order by service_id;
+-- Result = Total number (trip,stop)s departures on any given:
+--    weekday (sid=1) = 462872
+--   saturday (sid=2) = 372007
+--     sunday (sid=3) = 350173
+
+select service_id,count(*) 
+  from gtf_stoptimes_information gsi
+    natural join gtf_trips gt
+    natural join gtf_trip_information gti
+  where gsi.trip_stop_number != 0
+group by service_id
+order by service_id;
+-- Result = Total number (trip,stop)s departures on any given:
+--    weekday (sid=1) = 462872
+--   saturday (sid=2) = 372007
+--     sunday (sid=3) = 350173
+
+-- (They are identical, as they should be.)
+
+select 5*462872 + 372007 + 350173;
+-- Result: there are 3036540 total (trip,stop) arrivals/departures every week
+-- Therefore a weekday (trip,stop) should have 5/3036540 of the total
+-- count, and a weekend (trip,stop) should have 1/3036540 of the total.
 
 
-select gtfs_trip_id,stop_id, 
-count(*) as inclusion_count, 
-count(*) / 1861479::double precision as inclusion_frequency,
+select gtfs_trip_id,stop_id,
+count(lateness_arrive) as inclusion_count_arrive,
+count(lateness_arrive) / 1825415::double precision as inclusion_frequency_arrive,
+count(lateness_depart) as inclusion_count_depart,
+count(lateness_depart) / 1855810::double precision as inclusion_frequency_depart,
 
-case when service_id='1' then 5/3112646::double precision
-     else 		      1/3112646::double precision
+case when service_id='1' then 5/3036540::double precision
+     else                     1/3036540::double precision
 end as scheduled_frequency,
 
-case when service_id='1' then (5*1861479)/(count(*)*3112646::double precision)
-     else 		      (1*1861479)/(count(*)*3112646::double precision)
-end as trip_stop_weight
+case 
+  when service_id='1' and count(lateness_arrive) > 0
+    then (5*1825415)/(count(lateness_arrive)*3036540::double precision)
+  when service_id != '1' and count(lateness_arrive) > 0
+    then (1*1825415)/(count(lateness_arrive)*3036540::double precision)
+  else null
+end as trip_stop_weight_arrive,
+
+case 
+  when service_id='1' and count(lateness_depart) > 0
+    then (5*1855810)/(count(lateness_depart)*3036540::double precision)
+  when service_id != '1' and count(lateness_depart) > 0
+    then (1*1855810)/(count(lateness_depart)*3036540::double precision)
+  else null
+end as trip_stop_weight_depart
 
 into trip_stop_weights
-from datamining_table dm 
-where lateness is not null
-group by gtfs_trip_id,stop_id,service_id;
-
+from datamining_table dm
+where lateness_arrive is not null or lateness_depart is not null
+group by gtfs_trip_id, stop_id, service_id;
 
 create index tsweight_ix on trip_stop_weights (gtfs_trip_id,stop_id);
+

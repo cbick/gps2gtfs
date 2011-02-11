@@ -123,20 +123,20 @@ def correct_earlybird( segment_id, early_tolerance=300, late_tolerance=0 ):
 
 ### GPS<->GTFS MATCHUPS ###
 
-def load_and_cache_routes(routes = ['18']):
+def load_and_cache_routes(routes = ['18'],tzdiff=0):
   for route in routes:
     print "Caching route",route,"..."
-    load_and_cache_route(route);
+    load_and_cache_route(route,tzdiff);
     print "... done caching route."
 
-def load_and_cache_route( route_name ):
+def load_and_cache_route( route_name, tzdiff=0 ):
   """
   Given a route_short_name, loads all data available for that route 
   from GPS data, matches to GTFS schedule, and exports all valid trips found.
   """
 
   # Load the data
-  rte = gpstool.Route( route_name );
+  rte = gpstool.Route( route_name, tzdiff=tzdiff );
   
   # Export valid segments
   rte.export_segments(True);
@@ -157,12 +157,12 @@ def create_actual_timetable( segment_id ):
   times at each of the GTFS scheduled stops and stores in the database.
   """
   # Load the data
-  print "Loading segment",segment_id,"...",
+  print "Loading segment",segment_id,"..."
   bus = gps.GPSBusSchedule(segment_id);
   print "ok"
   
   # Export the data
-  print "Exporting schedule...",
+  print "Exporting schedule..."
   db.export_gps_schedule(segment_id,bus.getGPSSchedule());
   print "ok"
 
@@ -194,11 +194,12 @@ def populate_trip_information(trip_id):
     trip_duration = last_arrive - first_depart
   else:
     trip_duration = last_arrive - first_arrive
+  total_stops = len(stops)
 
   trip_length = populate_trip_stop_information(trip_id,stops);
 
   db.export_trip_information(trip_id,first_arrive,first_depart,
-                          trip_length,trip_duration);
+                          trip_length,trip_duration,total_stops);
 
 
 def populate_trip_stop_information(trip_id,stops):
@@ -261,7 +262,9 @@ if __name__=="__main__":
     print " where cmd (and its effect) is one of the following:"
     print """  trips -- populates the trip information
                populate_ridtags -- autopopulates route_id/dirtag matchup
-               match_trips -- match gtfs<-> gps trips
+               match_trips [timezonediff] -- match gtfs<-> gps trips
+                 timezonediff is the hours to add to the time recorded in the DB
+                 in order to match up with the times listed in the GTFS data.
                gps_schedules -- from gps trips find actual schedules
                fix_earlybirds -- fix too-early gps trips
           """
@@ -270,7 +273,11 @@ if __name__=="__main__":
   if arg == 'trips':
     populate_all_trip_information()
   elif arg == 'match_trips':
-    load_and_cache_routes(db.get_route_names())
+    try:
+      tzdiff = int(sys.argv[2])
+    except:
+      raise Exception, "Required to enter timezone diff (integer) for match_trips"
+    load_and_cache_routes(db.get_route_names(),tzdiff)
   elif arg == 'gps_schedules':
     create_all_actual_timetables()
   elif arg == 'fix_earlybirds':

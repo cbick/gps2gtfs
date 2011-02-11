@@ -246,7 +246,7 @@ def get_route_dirtags(route_short_name):
   return ret;
 
 
-def get_vehicle_reports(dirtags):
+def get_vehicle_reports(dirtags,tzdiff=0):
   """
   Given a list of dirtags, returns a list of dictlike rows of 
   vehicle tracking reports, sorted in ascending order of update time.
@@ -263,11 +263,12 @@ def get_vehicle_reports(dirtags):
   p = {}
   for i,d in enumerate(dirtags):
     p['k'+str(i)] = d;
-  sql = """SELECT id,lat,lon,routetag,dirtag,reported_update_time 
+  sql = """SELECT id,lat,lon,routetag,dirtag,
+               reported_update_time + interval '%d hours'
              from vehicle_track 
              where dirtag IN ( %s )
            order by reported_update_time asc""" \
-      % (','.join(map(lambda k: "%("+k+")s", p.keys())) ,)
+      % (int(tzdiff), ','.join(map(lambda k: "%("+k+")s", p.keys())) )
 
   cur = get_cursor();
   print "Executing..."
@@ -352,14 +353,14 @@ def get_previous_trip_ID(trip_id, start_date, offset, numtrips=10):
   today_ids = map(lambda sid: "'"+str(sid)+"'", 
                   get_serviceIDs_for_date(start_date));
   sql = """(select trip_id, 0 as offset,
-                  abs(first_departure-%(start_time)s) as diff 
+                  abs(first_departure- %(start_time)s) as diff 
              from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(today_ids) + """)
                and first_departure < %(start_time)s
            union
            select trip_id, 86400 as offset,
-                 abs(first_departure-86400-%(start_time)s) as diff
+                 abs(first_departure-86400- %(start_time)s ) as diff
              from gtf_trips natural join gtf_trip_information
              where direction_id=%(dir_id)s and route_id=%(route_id)s
                and service_id in (""" + ','.join(yesterday_ids) + """)
@@ -446,41 +447,21 @@ def get_best_matching_trip_ID(route_id, dir_id, start_date, start_time,
   return ret
 
 
-def getMaxSegID():
-  """
-  Returns the largest vehicle segment ID found in the "tracked_routes"
-  table (see the export_gps_route function below). This can be used to
-  construct a unique ID for further segments.
-
-  Note that there should be a 1-1 correspondence between segment and
-  trip IDs for any particular service day. Of course part of the point
-  of this is to eliminate any cases where this is not true in a meaningful
-  way.
-  """
-  sql = """select max(gps_segment_id) from gps_segments"""
-  cur = get_cursor()
-  SQLExec(cur,sql);
-  ret = [r['max'] for r in cur];
-  cur.close();
-
-  if ret[0] is None:
-    return 0;
-  return ret[0];
-
 
   
 
-def export_gps_route( trip_id, trip_date, segment_id, vehicle_id, 
+def export_gps_route( trip_id, trip_date, vehicle_id, 
                       gtfs_error, offset_seconds,
-                      gps_data, segment_exists = False):
+                      gps_data ):
   """
   Writes the given entry to the "tracked_routes" table. This table is used
   to cache the results of finding and filtering only the valid routes as
   represented in the GPS dataset.
+
+  Returns segment_id, a unique identifier for this GPS segment
   
   trip_id: the GTFS trip id
   trip_date: the date of the trip
-  segment_id: unique identifier for this GPS segment (see getMaxSegID())
   vehicle_id: as reported in the GPS data
   gtfs_error: The distance from the matched GTFS trip as measured by
               the GPSBusTrack metric
@@ -490,17 +471,18 @@ def export_gps_route( trip_id, trip_date, segment_id, vehicle_id,
             reported in the GPS dat. Note that reported_update_time should
             be a timestamp.
 
+
   WARNING: No effort is made to prevent duplicate entries! If you do this
   more than once for the same route then YOU MUST DELETE IT FIRST!
   """
 
   sql1 = """insert into gps_segments (
-              gps_segment_id, trip_id, trip_date, vehicle_id,
+              trip_id, trip_date, vehicle_id,
               schedule_error, schedule_offset_seconds
          ) VALUES (
-               %(seg_id)s,%(trip_id)s,%(trip_date)s,%(vehicle_id)s,
+               %(trip_id)s,%(trip_date)s,%(vehicle_id)s,
                %(gtfs_error)s, %(offset)s
-         )"""
+         ) RETURNING gps_segment_id"""
 
   sql2 = """insert into tracked_routes (
                gps_segment_id, lat, lon, reported_update_time
@@ -509,11 +491,11 @@ def export_gps_route( trip_id, trip_date, segment_id, vehicle_id,
              )"""
   cur = get_cursor()
 
-  if not segment_exists:
-    SQLExec(cur,sql1,
-            {'trip_id':trip_id,'trip_date':trip_date,'vehicle_id':vehicle_id,
-             'gtfs_error':str(gtfs_error),'seg_id':str(segment_id),
-             'offset':offset_seconds});
+  
+  SQLExec(cur,sql1,
+          {'trip_id':trip_id,'trip_date':trip_date,'vehicle_id':vehicle_id,
+           'gtfs_error':str(gtfs_error),'offset':offset_seconds});
+  segment_id = list(cur.fetchall())[0][0];
   
   for lat,lon,reported_update_time in gps_data:
     SQLExec(cur,sql2,
@@ -522,7 +504,7 @@ def export_gps_route( trip_id, trip_date, segment_id, vehicle_id,
              'seg_id':str(segment_id)});
 
   cur.close()
-
+  return segment_id
 
 def load_gps_segment_header(segment_id):
   """
@@ -621,8 +603,8 @@ def export_gps_schedule(segment_id,schedule):
          """stop_id,stop_sequence,stop_headsign,pickup_type,"""\
          """drop_off_type,shape_dist_traveled,timepoint,"""\
          """arrival_time_seconds,departure_time_seconds,"""\
-         """actual_arrival_time_seconds,seconds_since_last_stop,"""\
-         """prev_stop_id"""
+         """actual_arrival_time_seconds,actual_departure_time_seconds,"""\
+         """seconds_since_last_stop,prev_stop_id"""
   keys = keystr.split(",")
   
   sql = """insert into gps_stop_times (gps_segment_id,"""+keystr+""")
@@ -674,7 +656,7 @@ def load_gps_schedule(segment_id):
 
 
 def export_trip_information(trip_id,first_arrive,first_depart,
-                         trip_length,trip_duration):
+                         trip_length,trip_duration,total_stops):
   """
   Given a GTFS trip ID, the time (in seconds) of its first arrival and
   departure, the length of the whole trip in meters, and the duration
@@ -682,12 +664,14 @@ def export_trip_information(trip_id,first_arrive,first_depart,
   """
   
   sql="""insert into gtf_trip_information (trip_id,first_arrival,
-           first_departure,trip_length_meters,trip_duration_seconds)
+           first_departure,trip_length_meters,trip_duration_seconds,
+           total_num_stops)
          values
-           (%(tid)s,%(farr)s,%(fdep)s,%(lenm)s,%(durs)s)"""
+           (%(tid)s,%(farr)s,%(fdep)s,%(lenm)s,%(durs)s,%(tns)s)"""
   cur = get_cursor()
   SQLExec(cur,sql,{'tid':trip_id,'farr':first_arrive,'fdep':first_depart,
-                   'lenm':str(trip_length),'durs':trip_duration});
+                   'lenm':str(trip_length),'durs':trip_duration,
+                   'tns':total_stops});
   cur.close()
 
 

@@ -11,8 +11,11 @@ import ExcelPrint as EP
 split = DM.split_on_attributes
 array = Stats.array
 
-def rows_to_data(rows):
-  return array([(r['lateness'], r['trip_stop_weight']) for r in rows]);
+def rows_to_data_arrive(rows):
+  return array([(r['lateness_arrive'], r['trip_stop_weight_arrive']) for r in rows if r['lateness_arrive'] is not None]);
+
+def rows_to_data_depart(rows):
+  return array([(r['lateness_depart'], r['trip_stop_weight_depart']) for r in rows if r['lateness_depart'] is not None]);
 
 
 ## Initial retrieval and sorting of data
@@ -49,7 +52,9 @@ portions = split( ('route_portion',), rows);
 
 ### Unconditioned plots (no splits) ###
 
-data = rows_to_data(rows)
+data_arrive = rows_to_data_arrive(rows)
+data_depart = rows_to_data_depart(rows)
+data = data_arrive
 del rows
 
 ## ECDF plot ##

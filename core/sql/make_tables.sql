@@ -7,7 +7,7 @@ drop table gps_stop_times cascade;
 drop table gps_segments cascade;
 drop table gtf_trip_information cascade;
 drop table gtf_stoptimes_information cascade;
-
+drop table datamining_table cascade;
 
 begin;
 
@@ -83,7 +83,7 @@ create table gps_stop_times (
 
 
 create table gps_segments (
-  gps_segment_id bigint , --unique identifier for this gps trip
+  gps_segment_id bigserial , --unique identifier for this gps trip
   trip_id text, --references gtf_trips(trip_id)
   schedule_error numeric, --unique for (trip_id,trip_date) only
   schedule_offset_seconds integer, --seconds to subtract from GTFS times
@@ -98,8 +98,8 @@ create table gtf_trip_information (
   first_arrival integer,
   first_departure integer,
   trip_length_meters numeric,
-  trip_duration_seconds integer
-  
+  trip_duration_seconds integer,
+  total_num_stops integer  
 );
 
 create table gtf_stoptimes_information (
@@ -110,6 +110,38 @@ create table gtf_stoptimes_information (
   cumulative_distance_meters numeric, --distance of the trip up to this stop
   travel_time_seconds integer --according to the schedule, how long it takes
                               --to get from the previous stop to this stop.
+);
+
+
+create table datamining_table (
+  gps_segment_id bigint, 
+  gtfs_trip_id text, 
+  rms_schedule_error numeric, 
+  vehicle_id text,
+  route_name text, 
+  vehicle_type text, 
+  service_id text, 
+  direction_id integer,
+  stop_lat double precision, 
+  stop_lon double precision, 
+  stop_id text, 
+  stop_sequence integer,
+  scheduled_arrival_time integer, 
+  scheduled_departure_time integer,
+  actual_arrival_time integer, 
+  actual_departure_time integer,
+  lateness_arrive integer, 
+  lateness_depart integer,
+  seconds_since_last_stop integer,
+  prev_stop_id text,
+
+  scheduled_hour_of_arrival integer,
+  sched_trip_start_time integer,
+  trip_length_meters numeric,
+  trip_duration_seconds integer,
+  stop_number integer,
+  prev_stop_distance numeric,
+  stop_distance numeric
 );
 
 commit;

@@ -204,20 +204,72 @@ def get_stop_info( stop_id, day_of_week ):
     raise Exception, "Not a day of week"
 
   sql = """\
-select * 
+select gst.*, gt.*, gr.*, oa.observed_stop_id 
 from gtf_stop_times gst
   inner join gtf_trips gt on gst.trip_id = gt.trip_id
   inner join gtf_routes gr on gt.route_id = gr.route_id
+  left outer join observation_attributes oa
+    on oa.trip_id = gst.trip_id 
+      and oa.stop_sequence = gst.stop_sequence
+      and oa.day_of_week=%(dow)s
 where gst.stop_id=%(stopid)s
   and gt.service_id=%(sid)s
 order by gr.route_short_name, gst.arrival_time_seconds
 """
 
   cur = get_cursor()
-  SQLExec(cur,sql,{'stopid':stop_id,'sid':service_id})
+  SQLExec(cur,sql,{'stopid':stop_id,'sid':service_id,'dow':day_of_week})
   rows = cur.fetchall()
   cur.close()
 
   return map(dict,rows)
 
+
+def simplified_lateness_counts():
+  """
+  This is a one-time function to translate all data from datamining_table
+  into simplified_lateness_observations.
+  """
+  sql = """
+select dm.lateness, dm.gtfs_trip_id, dm.stop_id, dm.stop_sequence, 
+  ((EXTRACT(DOW FROM gs.trip_date) + 6)::integer % 7) as dow
+from datamining_table dm
+  inner join gps_segments gs on gs.gps_segment_id = dm.gps_segment_id
+"""
+
+  cur = get_cursor()
+  SQLExec(cur,sql);
+
+  tot = cur.rowcount
+  i=1
+  for row in cur:
+    if row['lateness'] is None:
+      continue
+    if i%1000 == 0:
+      print i,"/",tot
+    i+=1
+    lateness_observed( row['gtfs_trip_id'], row['stop_id'],
+                       row['dow'], 
+                       row['stop_sequence'], row['lateness'],
+                       auto_create = True );
+  cur.close()
+
+
+def get_routes_for_stop( stop_id ):
+  sql = """\
+select distinct(route_short_name) 
+from gtf_routes gr 
+  inner join gtf_trips gt 
+    on gr.route_id = gt.route_id 
+  inner join gtf_stop_times gst 
+    on gst.trip_id = gt.trip_id 
+where gst.stop_id = %(stopid)s
+"""
+
+  cur = get_cursor()
+  SQLExec(cur,sql,{'stopid':stop_id})
+  rows = cur.fetchall()
+  cur.close()
+
+  return [r[0] for r in rows]
 

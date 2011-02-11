@@ -1,0 +1,11 @@
+vacuum analyze vehicle_track;
+vacuum analyze config;
+vacuum analyze routeid_dirtag;
+vacuum analyze shape_dirtag;
+vacuum analyze tracked_routes;
+vacuum analyze gps_stop_times;
+vacuum analyze gps_segments;
+vacuum analyze gtf_trip_information;
+vacuum analyze gtf_stoptimes_information;
+vacuum analyze datamining_table;
+vacuum analyze trip_stop_weights;

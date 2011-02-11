@@ -929,7 +929,8 @@ select service_id,date_part('dow',trip_date) as wday,
   total_num_stops-stop_number as stops_before_end, total_num_stops, 
   (100*stop_number::numeric/total_num_stops)::int as route_portion, 
   vehicle_type,
-  lateness, trip_stop_weight 
+  lateness_arrive, lateness_depart, 
+  trip_stop_weight_arrive, trip_stop_weight_depart
 from datamining_table 
   natural join trip_stop_weights 
   natural join gps_segments 
@@ -937,8 +938,8 @@ from datamining_table
               from gtf_stop_times 
               group by trip_id) ns 
     on ns.trip_id = datamining_table.gtfs_trip_id 
-where lateness is not null
-and stop_number > 0
+where lateness_arrive is not null or lateness_depart is not null
+--and stop_number > 0
 """
 
 
