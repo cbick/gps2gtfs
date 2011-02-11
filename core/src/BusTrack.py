@@ -137,27 +137,11 @@ class BusTrack(object):
     if starttime > self.max_time:
       return None
 
-    def interp_helper(ll1,ll2,pt):
-      # returns (distance,fraction)
-      # where distance = distance of p1 from ll1-ll2 segment
-      # and fraction = fractional progress along the segment ll1->ll2
-      D_ps = gis.distance_from_segment_meters(ll1,ll2,pt);
-      D_12 = gis.distance_meters(ll1,ll2);
-      D_p1 = gis.distance_meters(ll1,pt);
-      if D_12 == 0:
-        return D_p1,0.0
-      if D_p1 < D_ps:
-        return D_p1,0.0
-      frac = sqrt( int(D_p1)**2 - int(D_ps)**2 ) / D_12;      
-      return (D_ps,frac);
-    def timefrac_helper(t1,t2,frac):
-      return t1 + (t2-t1)*frac;
-
     startloc = self.getLocationAtTime(starttime);
     ll1 = startloc
     ll2 = self.interpolation[self.cached_index+1][:2]
-    min_dist,frac = interp_helper(ll1,ll2,stoploc);
-    min_time = timefrac_helper(starttime,
+    min_dist,frac = gis.interp_helper(ll1,ll2,stoploc);
+    min_time = gis.timefrac_helper(starttime,
                                self.interpolation[self.cached_index+1][2],
                                frac);
     within_tol = (min_dist < tol);
@@ -169,11 +153,11 @@ class BusTrack(object):
       pt2 = self.interpolation[idx+1];
       ll1 = pt1[:2]
       ll2 = pt2[:2]
-      dist,frac = interp_helper(ll1,ll2,stoploc);
+      dist,frac = gis.interp_helper(ll1,ll2,stoploc);
       
       if dist < min_dist:
         min_dist = dist;
-        min_time = timefrac_helper(pt1[2],pt2[2],frac);
+        min_time = gis.timefrac_helper(pt1[2],pt2[2],frac);
         if str(min_time) == 'nan':
           raise Exception, "WTF"
 
@@ -193,18 +177,106 @@ class BusTrack(object):
       print "XXX No arrival, min dist was:",min_dist
       return None  
     
-    #print "OOO Arrival with distance:",min_dist
+    print "OOO Arrival with distance:",min_dist
     return min_time
     
     
 
-  def getTimesAtLocation(self,latlon,tol = 10.0):
+  def getTimesAtLocation(self,stoploc,tol=10.0,starttime=None,findjustone=False):
     """
-    Given a (lat,lon), returns the (begin,end) interval of the
+    Given a (lat,lon), returns a list of (begin,end,dist) intervals of the
     (estimated) times that the bus was within tol meters of that
-    location.
+    location, starting at starttime. The 'dist' part of each interval 
+    indicates the estimated minimum distance of the bus from stoploc during 
+    that interval.
+
+    If starttime is None, then defaults to the beginning of the track.
+
+    If findjustone is True, returns after finding the first complete interval.
     """
-    raise Exception, "Unimplemented"
+    in_range = False
+    current_interval = None # will be [begin,end,dist] holder
+    ret = []
+
+    if starttime is None: starttime = self.min_time;
+    starttime = max(starttime,self.min_time);
+    if starttime > self.max_time:
+      return ret
+
+    ## Process intersection at first sub-segment
+    startloc = self.getLocationAtTime(starttime);
+    ll1 = startloc
+    ll2 = self.interpolation[self.cached_index+1][:2]
+    t1,t2 = starttime, self.interpolation[self.cached_index+1][2]
+    overall_min_dist = gis.distance_from_segment_meters( ll1, ll2, stoploc )
+    intersect = gis.distance_intersect( ll1, ll2, stoploc, tol )
+
+    if intersect:
+      enter_frac,exit_frac,min_dist = intersect
+      enter_time = gis.timefrac_helper( t1,t2,enter_frac )
+      exit_time = gis.timefrac_helper( t1,t2,exit_frac )
+      if exit_frac == 1.0:
+        current_interval = [ enter_time, exit_time, min_dist ]
+        in_range = True
+      else:
+        ret.append([ enter_time, exit_time, min_dist ])
+
+    ## Process subsequent segments
+    for i in range(self.cached_index+1, len(self.interpolation)-1):
+      llt1 = self.interpolation[i]
+      llt2 = self.interpolation[i+1]
+      ll1,ll2 = llt1[:2],llt2[:2]
+
+      if len(ret) > 0 and findjustone:
+        return ret
+
+      overall_min_dist = min( overall_min_dist, 
+                              gis.distance_from_segment_meters(ll1,ll2,stoploc))
+
+      intersect = gis.distance_intersect( ll1,ll2,stoploc,tol )
+      if intersect is None:
+        if in_range:
+          ret.append(current_interval)
+          in_range = False
+          current_interval = None
+        else:
+          pass
+
+      else: # intersect is not None
+        enter_frac,exit_frac,min_dist = intersect
+        enter_time = gis.timefrac_helper( llt1[2],llt2[2],enter_frac )
+        exit_time  = gis.timefrac_helper( llt1[2],llt2[2],exit_frac )
+
+        if not in_range: # just entered range of stoploc
+          if exit_frac == 1.0:
+            current_interval = [ enter_time, exit_time, min_dist ]
+            in_range = True
+          else:
+            ret.append([ enter_time, exit_time, min_dist ])
+
+        else: # in_range
+          if enter_frac != 0.0:
+            raise Exception, "While in range, found enter_frac of %f" % (enter_frac,)
+          else:
+            current_interval[1] = exit_time
+            current_interval[2] = min(current_interval[2],min_dist)
+            if exit_frac == 1.0: # we're still in range
+              pass
+            else:
+              ret.append( current_interval )
+              in_range = False
+              current_interval = None
+
+    else: # end "for i in range..."
+      if in_range:
+        ret.append(current_interval)
+    
+    if not ret: # empty list
+      print "XXX No arrival, min dist was:",overall_min_dist
+
+    return ret
+
+
 
   def getRouteTimeInterval(self):
     """

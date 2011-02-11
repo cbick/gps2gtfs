@@ -200,7 +200,7 @@ class Route(object):
   Upon initialization, all VehicleReports are found for that route,
   and subsequently segmented into appropriate VehicleSegments.
   """
-  def __init__(self,route_short_name):
+  def __init__(self,route_short_name,tzdiff=0):
     self.route_short_name = str(route_short_name)
     self.dirtags=[]
     self.shapes = {}
@@ -217,7 +217,7 @@ class Route(object):
     
     
     
-    self.load_vehicle_reports()
+    self.load_vehicle_reports(tzdiff)
     print "\tFound %s vehicles" % len(self._vehicles)
     
     print "Finding route segments..."
@@ -236,10 +236,10 @@ class Route(object):
     self.dirtags.extend(db.get_route_dirtags(self.route_short_name));
       
 
-  def load_vehicle_reports(self):
+  def load_vehicle_reports(self,tzdiff):
     print "Loading vehicle reports..."
-    rows = db.get_vehicle_reports(self.dirtags);
-    print "\tDB fetch complete.  Sorting into objects.."
+    rows = db.get_vehicle_reports(self.dirtags,tzdiff);
+    print "\tDB fetch complete (%d rows).  Sorting into objects.." % (len(rows),)
 
     def helper(row):
       vehicle_id = row['id']

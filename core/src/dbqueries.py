@@ -246,7 +246,7 @@ def get_route_dirtags(route_short_name):
   return ret;
 
 
-def get_vehicle_reports(dirtags):
+def get_vehicle_reports(dirtags,tzdiff=0):
   """
   Given a list of dirtags, returns a list of dictlike rows of 
   vehicle tracking reports, sorted in ascending order of update time.
@@ -263,11 +263,12 @@ def get_vehicle_reports(dirtags):
   p = {}
   for i,d in enumerate(dirtags):
     p['k'+str(i)] = d;
-  sql = """SELECT id,lat,lon,routetag,dirtag,reported_update_time 
+  sql = """SELECT id,lat,lon,routetag,dirtag,
+               reported_update_time + interval '%d hours'
              from vehicle_track 
              where dirtag IN ( %s )
            order by reported_update_time asc""" \
-      % (','.join(map(lambda k: "%("+k+")s", p.keys())) ,)
+      % (int(tzdiff), ','.join(map(lambda k: "%("+k+")s", p.keys())) )
 
   cur = get_cursor();
   print "Executing..."
@@ -602,8 +603,8 @@ def export_gps_schedule(segment_id,schedule):
          """stop_id,stop_sequence,stop_headsign,pickup_type,"""\
          """drop_off_type,shape_dist_traveled,timepoint,"""\
          """arrival_time_seconds,departure_time_seconds,"""\
-         """actual_arrival_time_seconds,seconds_since_last_stop,"""\
-         """prev_stop_id"""
+         """actual_arrival_time_seconds,actual_departure_time_seconds,"""\
+         """seconds_since_last_stop,prev_stop_id"""
   keys = keystr.split(",")
   
   sql = """insert into gps_stop_times (gps_segment_id,"""+keystr+""")
@@ -655,7 +656,7 @@ def load_gps_schedule(segment_id):
 
 
 def export_trip_information(trip_id,first_arrive,first_depart,
-                         trip_length,trip_duration):
+                         trip_length,trip_duration,total_stops):
   """
   Given a GTFS trip ID, the time (in seconds) of its first arrival and
   departure, the length of the whole trip in meters, and the duration
@@ -663,12 +664,14 @@ def export_trip_information(trip_id,first_arrive,first_depart,
   """
   
   sql="""insert into gtf_trip_information (trip_id,first_arrival,
-           first_departure,trip_length_meters,trip_duration_seconds)
+           first_departure,trip_length_meters,trip_duration_seconds,
+           total_num_stops)
          values
-           (%(tid)s,%(farr)s,%(fdep)s,%(lenm)s,%(durs)s)"""
+           (%(tid)s,%(farr)s,%(fdep)s,%(lenm)s,%(durs)s,%(tns)s)"""
   cur = get_cursor()
   SQLExec(cur,sql,{'tid':trip_id,'farr':first_arrive,'fdep':first_depart,
-                   'lenm':str(trip_length),'durs':trip_duration});
+                   'lenm':str(trip_length),'durs':trip_duration,
+                   'tns':total_stops});
   cur.close()
 
 

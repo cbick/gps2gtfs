@@ -5,6 +5,7 @@ DROP INDEX vehicle_dirtag_idx;
 DROP index gpsarr_time_index;
 DROP index gpsdep_time_index;
 DROP index gpsstop_seq_index;
+DROP index gps_segid_index;
 DROP index segid_track_index;
 DROP index seg_sort_idx;
 DROP INDEX tripstart_idx;

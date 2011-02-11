@@ -111,3 +111,77 @@ def distance_from_segment_meters(pt1,pt2,ll):
   sh_pt = geom.Point(( lx,ly ))
   return sh_pt.distance(sh_line);
 
+def interp_helper(ll1,ll2,pt):
+  """
+  Returns (distance,fraction)
+  where distance = distance of p1 from ll1-ll2 segment, and 
+  fraction = fractional progress of the minimum-distance point
+  along the segment ll1->ll2
+  """
+  D_ps = distance_from_segment_meters(ll1,ll2,pt);
+  D_12 = distance_meters(ll1,ll2);
+  D_p1 = distance_meters(ll1,pt);
+  if D_12 == 0:
+    return D_p1,0.0
+  if D_p1 < D_ps:
+    return D_p1,0.0
+  frac = sqrt( int(D_p1)**2 - int(D_ps)**2 ) / D_12;      
+  return (D_ps,frac);
+
+def timefrac_helper(t1,t2,frac):
+  """
+  Shorthand for t1 + (t2-t1)*frac, returns the number
+  t whose fractional progress along t1->t2 is frac.
+  """
+  return t1 + (t2-t1)*frac;
+
+
+def distance_intersect(ll1,ll2,pt,tol):
+  """
+  Returns (enter_frac,exit_frac,min_dist), where:
+    enter_frac is the fractional progress of the first point 
+      in ll1->ll2 within tol meters of pt; 
+    exit_frac is the fractional progress of the last point 
+      in ll1->ll2 within tol meters of pt;
+    min_dist is the distance in meters from pt to the segment ll1-ll2.
+
+  If the first or last endpoint is within tol meters of pt, then
+  enter_frac or end_frac is guaranteed to be precisely 0.0 or
+  1.0, respectively.
+
+  Returns None if the ll1-ll2 segment has no points within
+  tol meters of pt.
+  """
+  ## First convert to meter coordinates for proper distance
+  lat1,lon1 = map(float,ll1)
+  lat2,lon2 = map(float,ll2)
+  ptlat,ptlon = map(float,pt)
+  midlat = ptlat #(lat1+lat2+ptlat)/3.
+  midlon = ptlon #(lon1+lon2+ptlon)/3.
+  m_per_lat,m_per_lon = latlon_distance_conversion(midlat);
+  ## Translate to the weighted center
+  y1,x1 = (lat1-midlat)*m_per_lat,(lon1-midlon)*m_per_lon
+  y2,x2 = (lat2-midlat)*m_per_lat,(lon2-midlon)*m_per_lon
+  pty,ptx = (ptlat-midlat)*m_per_lat,(ptlon-midlon)*m_per_lon
+  
+  intersect_zone = geom.Point((ptx,pty)).buffer(tol,100)
+  simple_point = geom.Point((ptx,pty))
+  seg = geom.LineString(( (x1,y1) , (x2,y2) ))
+  intersect = intersect_zone.intersection(seg);
+  
+  if intersect.is_empty:
+    return None
+
+  begin_pt, end_pt = geom.Point((x1,y1)), geom.Point((x2,y2))
+  frac_a = geom.Point( intersect.coords[0] ).distance( begin_pt ) / seg.length
+  frac_b = geom.Point( intersect.coords[1] ).distance( begin_pt ) / seg.length
+
+  frac_1,frac_2 = min(frac_a,frac_b), max(frac_a,frac_b)
+  if begin_pt.distance(simple_point) <= tol:
+    frac_1 = 0.0
+  if end_pt.distance(simple_point) <= tol:
+    frac_2 = 1.0
+
+  min_dist = simple_point.distance(seg)
+  
+  return (frac_1,frac_2,min_dist)

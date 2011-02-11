@@ -98,8 +98,8 @@ create table gtf_trip_information (
   first_arrival integer,
   first_departure integer,
   trip_length_meters numeric,
-  trip_duration_seconds integer
-  
+  trip_duration_seconds integer,
+  total_num_stops integer  
 );
 
 create table gtf_stoptimes_information (
@@ -114,7 +114,7 @@ create table gtf_stoptimes_information (
 
 
 create table datamining_table (
-  gps_segment_id text, 
+  gps_segment_id bigint, 
   gtfs_trip_id text, 
   rms_schedule_error numeric, 
   vehicle_id text,
@@ -129,7 +129,9 @@ create table datamining_table (
   scheduled_arrival_time integer, 
   scheduled_departure_time integer,
   actual_arrival_time integer, 
-  lateness integer, 
+  actual_departure_time integer,
+  lateness_arrive integer, 
+  lateness_depart integer,
   seconds_since_last_stop integer,
   prev_stop_id text,
 
