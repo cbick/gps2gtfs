@@ -125,7 +125,7 @@ def interp_helper(ll1,ll2,pt):
     return D_p1,0.0
   if D_p1 < D_ps:
     return D_p1,0.0
-  frac = sqrt( int(D_p1)**2 - int(D_ps)**2 ) / D_12;      
+  frac = math.sqrt( int(D_p1)**2 - int(D_ps)**2 ) / D_12;      
   return (D_ps,frac);
 
 def timefrac_helper(t1,t2,frac):
