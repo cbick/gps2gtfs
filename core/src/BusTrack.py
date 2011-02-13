@@ -272,7 +272,7 @@ class BusTrack(object):
         ret.append(current_interval)
     
     if not ret: # empty list
-      print "XXX No arrival, min dist was:",overall_min_dist
+      print "--- No arrival, min dist was:",overall_min_dist
 
     return ret
 

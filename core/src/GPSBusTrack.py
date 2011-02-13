@@ -188,7 +188,7 @@ class GPSBusSchedule(object):
         # So the best we can do is just estimate point of closest proximity
         # and take that as both arrival and departure time.
         arrivals = self.bustrack.getArrivalTimeAtLocation( stoploc=(lat,lon),
-                                                           tol=150.0,
+                                                           tol=150.0, # meters
                                                            starttime = lasttime )
         arrival_time = departure_time = arrivals
       
